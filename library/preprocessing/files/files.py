@@ -1,9 +1,10 @@
 import os
+import shutil
 
 
-class FileLoader:
-    file = ""
-    file_lines = []
+class TextFileLoader:
+    text = ""
+    text_lines = []
 
     def __init__(self, path):
         self.path = path
@@ -12,9 +13,9 @@ class FileLoader:
     def _load_file(self):
         with open(self.path) as file:
             for line in file:
-                self.file += line
-                self.file_lines.append(line.rstrip())
-        return self.file, self.file_lines
+                self.text += line
+                self.text_lines.append(line.rstrip())
+        return self.text, self.text_lines
 
 
 def save_to_file(path: str, filename: str, text: str):
@@ -45,3 +46,15 @@ def check_if_directory_exists(path: str):
     """
     if not os.path.isdir(path):
         raise FileNotFoundError()
+
+
+def create_file(filename: str, path: str, content=""):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    with open(os.path.join(path, filename), 'w') as new_file:
+        new_file.write(content)
+
+
+def remove_directory(path):
+    shutil.rmtree(path)

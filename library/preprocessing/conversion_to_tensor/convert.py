@@ -11,7 +11,7 @@ def char_to_tensor(char, alphabet):
     return tensor
 
 
-def text_to_tensor(text: str, alphabet: List):
+def text_to_tensor(alphabet: List, text: str):
     tensor = torch.LongTensor(len(text), len(alphabet))
     for counter, char in enumerate(text):
         tensor[counter] = char_to_tensor(char, alphabet)
