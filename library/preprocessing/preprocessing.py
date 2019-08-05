@@ -1,4 +1,5 @@
 import os
+from .exceptions import DirectoryNotSpecified
 
 
 class Preprocessing:
@@ -13,7 +14,7 @@ class Preprocessing:
         :return:
         """
         if not os.path.isdir(path):
-            raise FileNotFoundError
+            raise FileNotFoundError()
 
     def __init__(self, path: str):
         os.path.isdir(path)
@@ -31,9 +32,8 @@ class Preprocessing:
     def preprocess(self):
         if self.path:
             for author in os.listdir(self.path):
-                if filename.endswith(".asm") or filename.endswith(".py"):
-                    # print(os.path.join(directory, filename))
-                    continue
-                else:
-                    continue
+                print(author)
+            else:
+                pass
         else:
+            raise DirectoryNotSpecified()
