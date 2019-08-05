@@ -1,5 +1,4 @@
 import os
-from .exceptions import DirectoryNotSpecified
 
 
 class Preprocessing:
@@ -17,11 +16,23 @@ class Preprocessing:
             raise FileNotFoundError()
 
     def __init__(self, path: str):
-        os.path.isdir(path)
+        self._check_if_directory_exists(path)
         self.path = path
 
     def save_to_files(self, path: str):
         self._check_if_directory_exists(path)
+
+    def _map_file(self):
+        pass
+
+    def map_directory(self):
+        pass
+
+    def convert_file_to_tensor(self):
+        pass
+
+    def _convert_directories_to_tensors(self):
+        pass
 
     def _preprocess_file(self):
         pass
@@ -30,10 +41,14 @@ class Preprocessing:
         pass
 
     def preprocess(self):
-        if self.path:
-            for author in os.listdir(self.path):
-                print(author)
-            else:
-                pass
+        for author in os.listdir(self.path):
+            if
+            for text in os.listdir(self.path + author):
+                print(text)
         else:
-            raise DirectoryNotSpecified()
+            pass
+
+
+path = "../../data/authors/"
+p = Preprocessing(path=path)
+p.preprocess()
