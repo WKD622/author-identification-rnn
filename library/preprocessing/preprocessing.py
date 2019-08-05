@@ -1,26 +1,19 @@
 import os
 
+from library.preprocessing.files.files import check_if_directory, FileLoader, check_if_file, check_if_directory_exists
+from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention
+
 
 class Preprocessing:
     authors = []
     path = None
 
-    @staticmethod
-    def _check_if_directory_exists(path: str):
-        """
-        Rises FileNotFoundError if directory under given path does not exist.
-        :param path: e
-        :return:
-        """
-        if not os.path.isdir(path):
-            raise FileNotFoundError()
-
     def __init__(self, path: str):
-        self._check_if_directory_exists(path)
+        check_if_directory_exists(path)
         self.path = path
 
     def save_to_files(self, path: str):
-        self._check_if_directory_exists(path)
+        check_if_directory_exists(path)
 
     def _map_file(self):
         pass
@@ -34,19 +27,21 @@ class Preprocessing:
     def _convert_directories_to_tensors(self):
         pass
 
-    def _preprocess_file(self):
-        pass
+    def _preprocess_text(self, text):
+        print(text)
 
-    def _preprocess_directory(self):
-        pass
+    def _preprocess_directory(self, path):
+        for file in os.listdir(path):
+            file_path = os.path.join(path, file)
+            if check_if_file(file_path) and check_name_convention(file, TEXT_NAME_CONVENTIONS):
+                file_loader = FileLoader(file_path)
+                self._preprocess_text(file_loader.file)
 
     def preprocess(self):
         for author in os.listdir(self.path):
-            if
-            for text in os.listdir(self.path + author):
-                print(text)
-        else:
-            pass
+            directory_path = os.path.join(self.path, author)
+            if check_if_directory(directory_path):
+                self._preprocess_directory(directory_path)
 
 
 path = "../../data/authors/"
