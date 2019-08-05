@@ -1,4 +1,4 @@
-def map_characters(letters: dict, file) -> str:
+def map_characters(mapper: dict, file) -> str:
     """
     Converts string to list of ascii characters numbers.
 
@@ -14,5 +14,5 @@ def map_characters(letters: dict, file) -> str:
     out = ""
     for line in file:
         line = line.lower()
-        out += ''.join([letters[character] for character in line if character in letters])
+        out += ''.join([mapper[character] for character in line if character in mapper])
     return out
