@@ -3,7 +3,8 @@ import re
 import sys
 
 from library.preprocessing.chars_mapping.map import map_characters
-from library.preprocessing.files.files import check_if_directory, TextFileLoader, check_if_file, \
+from library.preprocessing.constants import KNOWN, UNKNOWN
+from library.preprocessing.files.files_operations import check_if_directory, TextFileLoader, check_if_file, \
     check_if_directory_exists, remove_directory
 from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
 import importlib
@@ -34,11 +35,12 @@ class Preprocessing:
         if self.mapped_path and check_if_directory(self.mapped_path):
             remove_directory(self.mapped_path)
 
-    def convert_file_to_tensor(self):
-        pass
-
-    def _convert_directories_to_tensors(self):
-        pass
+    def _convert_to_tensors(self):
+        for_conversion = self.reduced_authors.get_data()
+        for author in for_conversion.keys():
+            for known in for_conversion[author][KNOWN]:
+                pass
+            unknown = self.reduced_authors[UNKNOWN]
 
     def logging(self, message: str):
         if self.logs:
@@ -78,6 +80,7 @@ class Preprocessing:
 
     def preprocess(self):
         self._map_directories()
+        self._convert_to_tensors()
 
 
 path = "../../data/authors/"

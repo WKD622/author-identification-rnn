@@ -1,7 +1,7 @@
 import os
 
 from library.preprocessing.constants import KNOWN, UNKNOWN, PATH, FILENAME, CONTENT
-from library.preprocessing.files.files import create_file
+from library.preprocessing.files.files_operations import create_file
 
 
 class ReducedAuthors:
@@ -42,3 +42,6 @@ class ReducedAuthors:
                 create_file(filename, path, content)
             unknown = self.reduced_authors[author][UNKNOWN]
             create_file(unknown[FILENAME], path, unknown[CONTENT])
+
+    def get_data(self):
+        return self.reduced_authors
