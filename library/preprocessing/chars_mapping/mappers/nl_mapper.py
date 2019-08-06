@@ -98,4 +98,4 @@ charmap = {
     u'*': '',                   # removed Po, 1 < 6
     u'\u0327': '',              # "̧" -> ""   removed Mn, 1 < 6 COMBINING CEDILLA
 }
-# characters_mapping 96 characters to 48, (decomposed)
+# chars_mapping 96 characters to 48, (decomposed)

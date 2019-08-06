@@ -17,10 +17,10 @@ def text_to_tensor(alphabet: List, text: str):
         tensor[counter] = char_to_tensor(char, alphabet)
     return tensor
 #
-# from library.preprocessing.conversion_to_tensor.alphabets.en import alphabet as en_alphabet
+# from library.preprocessing.to_tensor.alphabets.en import alphabet as en_alphabet
 # from library.files.files import save_to_file, FileLoader
-# from library.preprocessing.characters_mapping.map import map_characters
-# from library.preprocessing.characters_mapping.mappers.en import charmap as en
+# from library.preprocessing.chars_mapping.map import map_characters
+# from library.preprocessing.chars_mapping.mappers.en import charmap as en
 # path = "../../../data/authors/EN001/known01.txt"
 # text = ""
 # f = open(path, "r")

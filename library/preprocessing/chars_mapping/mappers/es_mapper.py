@@ -99,4 +99,4 @@ charmap = {
     u"'": "'",                  # single quote
     u'*': '',                   # removed Po, 2 < 29
 }
-# characters_mapping 97 characters to 52, (decomposed)
+# chars_mapping 97 characters to 52, (decomposed)

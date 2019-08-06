@@ -75,4 +75,4 @@ charmap = {
     u'Z': u'\xb9z',             # decomposed caps kept letter under threshold 2 < 3
     u'X': u'\xb9x',
 }
-# characters_mapping 72 characters to 40, (decomposed)
+# chars_mapping 72 characters to 40, (decomposed)

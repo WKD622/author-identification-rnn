@@ -146,4 +146,4 @@ charmap = {
     u'Z': u'\xb9s',             # decomposed caps kept letter under threshold 2 < 18
     u']': u')',                 # brackets
 }
-# characters_mapping 144 characters to 48, (decomposed)
+# chars_mapping 144 characters to 48, (decomposed)
