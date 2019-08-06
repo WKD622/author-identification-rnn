@@ -1,5 +1,3 @@
-import os
-
 from library.preprocessing.constants import KNOWN, UNKNOWN, PATH, FILENAME, CONTENT
 from library.preprocessing.files.files_operations import create_file
 
@@ -28,7 +26,7 @@ class ReducedAuthors:
         }
 
     def add_path(self, author: str, path_to_mapped: str):
-        self.reduced_authors[author][PATH] = os.path.join(path_to_mapped, author)
+        self.reduced_authors[author][PATH] = path_to_mapped
 
     def clear(self):
         self.reduced_authors = {}
