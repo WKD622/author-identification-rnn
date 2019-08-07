@@ -19,7 +19,7 @@ class BatchProcessor:
         return self.batch_tensor
 
 
-t = torch.LongTensor(140)
-test = BatchProcessor(t)
-print(test.get_batches())
+# t = torch.LongTensor(140)
+# test = BatchProcessor(t)
+# print(test.get_batches())
 
