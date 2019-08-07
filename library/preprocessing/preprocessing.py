@@ -24,9 +24,8 @@ class CharactersMapper:
     reduced_authors = ReducedAuthors()
 
     def __init__(self, language: str, **kwargs):
-        check_if_directory_exists(data_path)
-        sys.path.insert(0, "chars_mapping/mappers")
         self.data_path = kwargs.get(DATA_PATH)
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/chars_mapping/mappers")
         self.mapper = importlib.import_module(language + "_mapper").charmap
         self.mapped_save_path = kwargs.get(MAPPED_SAVE_PATH)
         if self.data_path:
@@ -95,7 +94,7 @@ class ToTensor:
         self.mapped_source_path = kwargs.get(MAPPED_SOURCE_PATH)
         if self.mapped_source_path:
             check_if_directory_exists(self.mapped_source_path)
-        sys.path.insert(1, "to_tensor/alphabets")
+        sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)) + "/to_tensor/alphabets")
         self.alphabet = importlib.import_module(language + "_alphabet").alphabet
         self.tensors_path = kwargs.get(TENSORS_PATH)
         if not self.tensors_path:
@@ -156,36 +155,7 @@ class Preprocessing:
         self.preprocess()
 
     def preprocess(self):
-        """
-        Mapping:
-        data_path, language, mapped_save_path
-
-        ToTensorConverting:
-        mapped_source_path, language, tensors_path, reduced_authors
-
-        1. mapowanie z plikow
-            - z zapisem
-            - bez zapisu (domyślna)
-        2. konwersja na tensory
-            - z plików
-            - z ramu (domyślna)
-        """
-
         characters_mapper = CharactersMapper(**self.kwargs)
         if self.data_path:
             self.kwargs.update({REDUCED_AUTHORS: characters_mapper.get_data()})
         ToTensor(**self.kwargs)
-
-
-import pprint
-
-pp = pprint.PrettyPrinter(indent=3)
-
-data_path = "../../data/authors/"
-mapped_save_path = "../../data/reduced_authors/"
-mapped_source_path = "../../data/reduced_authors/"
-tensors_path = "../../data/tensors/"
-language = "en"
-pr = Preprocessing(language='en',
-                   tensors_path=tensors_path,
-                   mapped_source_path=mapped_source_path)
