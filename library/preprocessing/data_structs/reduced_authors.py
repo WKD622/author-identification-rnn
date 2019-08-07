@@ -1,5 +1,6 @@
 import os
 import re
+from typing import List
 
 from library.preprocessing.constants import KNOWN, UNKNOWN, PATH, FILENAME, CONTENT
 from library.preprocessing.files.files_operations import create_file, check_if_directory, check_if_file, TextFileLoader
@@ -37,12 +38,12 @@ class ReducedAuthors:
 
     def save_to_files(self):
         for author in self.reduced_authors.keys():
-            path = self.reduced_authors[author][PATH]
-            for known in self.reduced_authors[author][KNOWN]:
+            path = self.get_author_path(author)
+            for known in self.get_author_known(author):
                 filename = known[FILENAME]
                 content = known[CONTENT]
                 create_file(filename, path, content)
-            unknown = self.reduced_authors[author][UNKNOWN]
+            unknown = self.get_author_unknown(author)
             create_file(unknown[FILENAME], path, unknown[CONTENT])
 
     def _load_directory(self, path: str, author: str):
@@ -58,11 +59,12 @@ class ReducedAuthors:
                 else:
                     self.add_unknown(author, filename, content=text)
 
+    def load_dict(self, reduced_authors):
+        self.reduced_authors = reduced_authors
+
     def load_from_files(self, path):
         """
         Loads MAPPED files to memory.
-        :param path:
-        :return:
         """
         self.clear()
 
@@ -73,3 +75,22 @@ class ReducedAuthors:
 
     def get_data(self):
         return self.reduced_authors
+
+    def get_author(self, author):
+        return self.reduced_authors[author]
+
+    def get_author_known(self, author: str) -> List:
+        return self.reduced_authors[author][KNOWN]
+
+    def get_author_unknown(self, author: str) -> str:
+        return self.reduced_authors[author][UNKNOWN]
+
+    def get_author_path(self, author: str) -> str:
+        return self.reduced_authors[author][PATH]
+
+    def get_author_merged_known(self, author: str) -> str:
+        known = self.get_author_known(author)
+        merged = ""
+        for text in known:
+            merged += text[CONTENT]
+        return merged
