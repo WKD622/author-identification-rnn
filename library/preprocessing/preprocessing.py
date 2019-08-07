@@ -6,9 +6,10 @@ import sys
 import torch
 
 from library.preprocessing.chars_mapping.map import map_characters
-from library.preprocessing.constants import KNOWN, UNKNOWN
+from library.preprocessing.constants import (KNOWN, UNKNOWN, LANGUAGE, DATA_PATH, MAPPED_SOURCE_PATH, MAPPED_SAVE_PATH,
+                                             REDUCED_AUTHORS, TENSORS_PATH, TENSORS)
 from library.preprocessing.data_structs.reduced_authors import ReducedAuthors
-from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified
+from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified, NoLanguageSpecified
 from library.preprocessing.files.files_operations import (check_if_directory, TextFileLoader, check_if_file,
                                                           check_if_directory_exists, remove_directory)
 from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
@@ -18,23 +19,18 @@ from library.preprocessing.to_tensor.convert import text_to_tensor
 class CharactersMapper:
     data_path = None
     mapper = None
-    mapped_path = None
-    logs = None
-    reduced_authors = ReducedAuthors()
+    mapped_save_path = None
     mapped = False
+    reduced_authors = ReducedAuthors()
 
-    def __init__(self, data_path: str, language="en", **kwargs):
+    def __init__(self, language: str, **kwargs):
         check_if_directory_exists(data_path)
         sys.path.insert(0, "chars_mapping/mappers")
-        self.data_path = data_path
+        self.data_path = kwargs.get(DATA_PATH)
         self.mapper = importlib.import_module(language + "_mapper").charmap
-        self.logs = kwargs.get('logs', False)
-        self.mapped_path = kwargs.get('mapped_path')
-        self.map()
-
-    def logging(self, message: str):
-        if self.logs:
-            print(message)
+        self.mapped_save_path = kwargs.get(MAPPED_SAVE_PATH)
+        if self.data_path:
+            self.map()
 
     def save_mapped(self):
         self.reduced_authors.save_to_files()
@@ -44,10 +40,10 @@ class CharactersMapper:
         Maps directory from given path.
         """
         self.reduced_authors.add_author(author)
-        if self.mapped_path:
-            self.reduced_authors.add_path(author, os.path.join(self.mapped_path, author))
+        if self.mapped_save_path:
+            self.reduced_authors.add_path(author, os.path.join(self.mapped_save_path, author))
         else:
-            self.reduced_authors.add_path(author, os.path.join('reduced_authors', author))
+            self.reduced_authors.add_path(author, os.path.join(REDUCED_AUTHORS, author))
 
         for filename in os.listdir(path):
             file_path = os.path.join(path, filename)
@@ -64,8 +60,8 @@ class CharactersMapper:
         Preparation before mapping. If there is mapped_path specified removes old content from it,
         and then clears data structure to be able to be filled with new data.
         """
-        if self.mapped_path and check_if_directory(self.mapped_path):
-            remove_directory(self.mapped_path)
+        if self.mapped_save_path and check_if_directory(self.mapped_save_path):
+            remove_directory(self.mapped_save_path)
         self.reduced_authors.clear()
 
     def map(self):
@@ -78,7 +74,7 @@ class CharactersMapper:
             if check_if_directory(directory_path):
                 self._map_directory(directory_path, author)
         self.mapped = True
-        if self.mapped_path:
+        if self.mapped_save_path:
             self.save_mapped()
 
     def get_data(self):
@@ -91,22 +87,29 @@ class CharactersMapper:
 class ToTensor:
     alphabet = None
     tensors_path = None
-    mapped_path = None
+    mapped_source_path = None
     reduced_authors = None
     converted = False
 
-    def __init__(self, language="en", **kwargs):
-        self.mapped_path = kwargs.get('mapped_path')
-        if self.mapped_path:
-            check_if_directory_exists(self.mapped_path)
+    def __init__(self, language: str, **kwargs):
+        self.mapped_source_path = kwargs.get(MAPPED_SOURCE_PATH)
+        if self.mapped_source_path:
+            check_if_directory_exists(self.mapped_source_path)
         sys.path.insert(1, "to_tensor/alphabets")
         self.alphabet = importlib.import_module(language + "_alphabet").alphabet
-        self.logs = kwargs.get('logs', False)
-        self.tensors_path = kwargs.get('tensors_path')
+        self.tensors_path = kwargs.get(TENSORS_PATH)
         if not self.tensors_path:
-            self.tensors_path = 'tensors'
-        self.reduced_authors = kwargs.get('reduced_authors')
+            self.tensors_path = TENSORS
+        self.reduced_authors = kwargs.get(REDUCED_AUTHORS)
         self.convert()
+
+    def preparation(self):
+        """
+        Preparation before mapping. If there is mapped_path specified removes old content from it,
+        and then clears data structure to be able to be filled with new data.
+        """
+        if check_if_directory(self.tensors_path) and self.tensors_path:
+            remove_directory(self.tensors_path)
 
     def save_tensor_to_file(self, tensor, path: str, filename: str):
         os.makedirs(path)
@@ -124,12 +127,15 @@ class ToTensor:
 
     def convert(self):
         reduced_authors = ReducedAuthors()
-        if self.reduced_authors:
+        if self.mapped_source_path:
+            print("using hard drive for creating tensors")
+            reduced_authors.load_from_files(self.mapped_source_path)
+        elif self.reduced_authors:
+            print("using ram for creating tensors")
             reduced_authors.load_dict(self.reduced_authors)
-        elif self.mapped_path:
-            reduced_authors.load_from_files(self.mapped_path)
         else:
             raise NoDataSourceSpecified()
+        self.preparation()
         self._convert_to_tensors(reduced_authors)
 
 
@@ -137,35 +143,49 @@ class Preprocessing:
     kwargs = None
     language = None
     data_path = None
-    only_to_tensor = None
 
     def check_kwargs(self, kwargs):
-        data_path = kwargs.get('data_path')
-        if not data_path:
-            raise NoDataSourceSpecified()
-        check_if_directory_exists(data_path)
+        if not kwargs.get(LANGUAGE):
+            raise NoLanguageSpecified()
 
     def __init__(self, **kwargs):
         self.check_kwargs(kwargs)
-        self.language = kwargs.pop('language', 'en')
-        self.data_path = kwargs.pop('data_path')
-        self.only_to_tensor = kwargs.pop('only_to_tensor', False)
+        self.language = kwargs.get(LANGUAGE, 'en')
+        self.data_path = kwargs.get(DATA_PATH)
         self.kwargs = kwargs
+        self.preprocess()
 
     def preprocess(self):
-        data = None
-        if not self.only_to_tensor:
-            characters_mapper = CharactersMapper(data_path=self.data_path, language=self.language, **self.kwargs)
-            data = characters_mapper.get_data()
+        """
+        Mapping:
+        data_path, language, mapped_save_path
 
-        ToTensor(language=self.language, reduced_authors=data, **self.kwargs)
+        ToTensorConverting:
+        mapped_source_path, language, tensors_path, reduced_authors
 
-    # import pprint
-    # pp = pprint.PrettyPrinter(indent=3)
-    #
-    # data_path = "../../data/authors/"
-    # mapped_path = "../../data/reduced_authors/"
-    # tensors_path = "../../data/tensors/"
-    # language = "en"
-    # ch = CharactersMapper(data_path=data_path, language=language, mapped_path=mapped_path)
-    # conv = ToTensor(language=language, reduced_authors=ch.get_data(), tensors_path=tensors_path)
+        1. mapowanie z plikow
+            - z zapisem
+            - bez zapisu (domyślna)
+        2. konwersja na tensory
+            - z plików
+            - z ramu (domyślna)
+        """
+
+        characters_mapper = CharactersMapper(**self.kwargs)
+        if self.data_path:
+            self.kwargs.update({REDUCED_AUTHORS: characters_mapper.get_data()})
+        ToTensor(**self.kwargs)
+
+
+import pprint
+
+pp = pprint.PrettyPrinter(indent=3)
+
+data_path = "../../data/authors/"
+mapped_save_path = "../../data/reduced_authors/"
+mapped_source_path = "../../data/reduced_authors/"
+tensors_path = "../../data/tensors/"
+language = "en"
+pr = Preprocessing(language='en',
+                   tensors_path=tensors_path,
+                   mapped_source_path=mapped_source_path)
