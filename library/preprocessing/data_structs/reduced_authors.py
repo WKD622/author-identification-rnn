@@ -1,5 +1,9 @@
+import os
+import re
+
 from library.preprocessing.constants import KNOWN, UNKNOWN, PATH, FILENAME, CONTENT
-from library.preprocessing.files.files_operations import create_file
+from library.preprocessing.files.files_operations import create_file, check_if_directory, check_if_file, TextFileLoader
+from library.preprocessing.files.name_convention import check_name_convention, TEXT_NAME_CONVENTIONS, KNOWN_AUTHOR
 
 
 class ReducedAuthors:
@@ -40,6 +44,32 @@ class ReducedAuthors:
                 create_file(filename, path, content)
             unknown = self.reduced_authors[author][UNKNOWN]
             create_file(unknown[FILENAME], path, unknown[CONTENT])
+
+    def _load_directory(self, path: str, author: str):
+        self.add_author(author)
+        self.add_path(author, os.path.join(path, author))
+
+        for filename in os.listdir(path):
+            file_path = os.path.join(path, filename)
+            if check_if_file(file_path) and check_name_convention(filename, TEXT_NAME_CONVENTIONS):
+                text = TextFileLoader(file_path).text
+                if re.match(KNOWN_AUTHOR, filename):
+                    self.add_known(author, filename, content=text)
+                else:
+                    self.add_unknown(author, filename, content=text)
+
+    def load_from_files(self, path):
+        """
+        Loads MAPPED files to memory.
+        :param path:
+        :return:
+        """
+        self.clear()
+
+        for author in os.listdir(path):
+            directory_path = os.path.join(path, author)
+            if check_if_directory(directory_path):
+                self._load_directory(directory_path, author)
 
     def get_data(self):
         return self.reduced_authors
