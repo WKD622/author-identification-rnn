@@ -31,6 +31,7 @@ class CharactersMapper:
         self.mapper = importlib.import_module(language + "_mapper").charmap
         self.logs = kwargs.get('logs', False)
         self.mapped_path = kwargs.get('mapped_path')
+        self.map()
 
     def logging(self, message: str):
         if self.logs:
@@ -46,6 +47,8 @@ class CharactersMapper:
         self.reduced_authors.add_author(author)
         if self.mapped_path:
             self.reduced_authors.add_path(author, os.path.join(self.mapped_path, author))
+        else:
+            self.reduced_authors.add_path(author, os.path.join('reduced_authors', author))
 
         for filename in os.listdir(path):
             file_path = os.path.join(path, filename)
@@ -71,8 +74,8 @@ class CharactersMapper:
         Iterates through all directories and runs _map_directory method on each.
         """
         self.preparation()
-        for author in os.listdir(self.path):
-            directory_path = os.path.join(self.path, author)
+        for author in os.listdir(self.data_path):
+            directory_path = os.path.join(self.data_path, author)
             if check_if_directory(directory_path):
                 self._map_directory(directory_path, author)
         self.mapped = True
@@ -92,7 +95,6 @@ class ToTensor:
     mapped_path = None
     reduced_authors = None
     converted = False
-    tensored_authors = TensoredAuthors()
 
     def __init__(self, language="en", **kwargs):
         self.mapped_path = kwargs.get('mapped_path')
@@ -102,9 +104,13 @@ class ToTensor:
         self.alphabet = importlib.import_module(language + "_alphabet").alphabet
         self.logs = kwargs.get('logs', False)
         self.tensors_path = kwargs.get('tensors_path')
+        if not self.tensors_path:
+            self.tensors_path = 'tensors'
         self.reduced_authors = kwargs.get('reduced_authors')
+        self.convert()
 
     def save_tensor_to_file(self, tensor, path: str, filename: str):
+        os.makedirs(path)
         full_path = os.path.join(path, filename + '.pt')
         torch.save(tensor, full_path)
 
@@ -119,10 +125,10 @@ class ToTensor:
 
     def convert(self):
         reduced_authors = ReducedAuthors()
-        if self.mapped_path:
-            reduced_authors.load_from_files(self.mapped_path)
-        elif self.reduced_authors:
+        if self.reduced_authors:
             reduced_authors.load_dict(self.reduced_authors)
+        elif self.mapped_path:
+            reduced_authors.load_from_files(self.mapped_path)
         else:
             raise NoDataSourceSpecified()
         self._convert_to_tensors(reduced_authors)
@@ -132,10 +138,12 @@ class Preprocessing:
     def preprocess(self):
         pass
 
+import pprint
+pp = pprint.PrettyPrinter(indent=3)
 
 data_path = "../../data/authors/"
 mapped_path = "../../data/reduced_authors/"
-p = Preprocessing(path=data_path, logs=False, mapped_path=mapped_path)
-p.preprocess()
-
-# check_data_structure(path)
+tensors_path = "../../data/tensors/"
+language = "en"
+ch = CharactersMapper(data_path=data_path, language=language, mapped_path=mapped_path)
+conv = ToTensor(language=language, reduced_authors=ch.get_data(), tensors_path=tensors_path)
