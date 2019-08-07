@@ -1,3 +1,4 @@
+import importlib
 import os
 import re
 import sys
@@ -5,14 +6,12 @@ import sys
 import torch
 
 from library.preprocessing.chars_mapping.map import map_characters
-from library.preprocessing.constants import KNOWN, UNKNOWN, PATH, FILENAME, CONTENT
-from library.preprocessing.data_structs.tensored_authors import TensoredAuthors
-from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified
-from library.preprocessing.files.files_operations import check_if_directory, TextFileLoader, check_if_file, \
-    check_if_directory_exists, remove_directory, create_file
-from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
-import importlib
+from library.preprocessing.constants import KNOWN, UNKNOWN
 from library.preprocessing.data_structs.reduced_authors import ReducedAuthors
+from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified
+from library.preprocessing.files.files_operations import (check_if_directory, TextFileLoader, check_if_file,
+                                                          check_if_directory_exists, remove_directory)
+from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
 from library.preprocessing.to_tensor.convert import text_to_tensor
 
 
@@ -99,7 +98,7 @@ class ToTensor:
     def __init__(self, language="en", **kwargs):
         self.mapped_path = kwargs.get('mapped_path')
         if self.mapped_path:
-            check_if_directory_exists(mapped_path)
+            check_if_directory_exists(self.mapped_path)
         sys.path.insert(1, "to_tensor/alphabets")
         self.alphabet = importlib.import_module(language + "_alphabet").alphabet
         self.logs = kwargs.get('logs', False)
@@ -135,15 +134,38 @@ class ToTensor:
 
 
 class Preprocessing:
+    kwargs = None
+    language = None
+    data_path = None
+    only_to_tensor = None
+
+    def check_kwargs(self, kwargs):
+        data_path = kwargs.get('data_path')
+        if not data_path:
+            raise NoDataSourceSpecified()
+        check_if_directory_exists(data_path)
+
+    def __init__(self, **kwargs):
+        self.check_kwargs(kwargs)
+        self.language = kwargs.pop('language', 'en')
+        self.data_path = kwargs.pop('data_path')
+        self.only_to_tensor = kwargs.pop('only_to_tensor', False)
+        self.kwargs = kwargs
+
     def preprocess(self):
-        pass
+        data = None
+        if not self.only_to_tensor:
+            characters_mapper = CharactersMapper(data_path=self.data_path, language=self.language, **self.kwargs)
+            data = characters_mapper.get_data()
 
-import pprint
-pp = pprint.PrettyPrinter(indent=3)
+        ToTensor(language=self.language, reduced_authors=data, **self.kwargs)
 
-data_path = "../../data/authors/"
-mapped_path = "../../data/reduced_authors/"
-tensors_path = "../../data/tensors/"
-language = "en"
-ch = CharactersMapper(data_path=data_path, language=language, mapped_path=mapped_path)
-conv = ToTensor(language=language, reduced_authors=ch.get_data(), tensors_path=tensors_path)
+    # import pprint
+    # pp = pprint.PrettyPrinter(indent=3)
+    #
+    # data_path = "../../data/authors/"
+    # mapped_path = "../../data/reduced_authors/"
+    # tensors_path = "../../data/tensors/"
+    # language = "en"
+    # ch = CharactersMapper(data_path=data_path, language=language, mapped_path=mapped_path)
+    # conv = ToTensor(language=language, reduced_authors=ch.get_data(), tensors_path=tensors_path)
