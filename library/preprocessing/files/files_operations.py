@@ -3,6 +3,19 @@ import shutil
 
 
 class TextFileLoader:
+    """
+    Used for easy file usage. During initialization you have to pass path to file
+    in constructor. Example:
+
+    file_path = "/example/path"
+    text_file_loader = TextFileLoader(file_path)
+
+    and you have this text in str form:
+    text_file_loader.text
+
+    and in list form, where elements are file lines (also str):
+    text_file_loader.text_lines
+    """
     text = ""
     text_lines = []
 
@@ -18,9 +31,12 @@ class TextFileLoader:
         return self.text, self.text_lines
 
 
-def save_to_file(path: str, filename: str, text: str):
+def save_to_file(path: str, filename: str, content: str):
+    """
+    Saves file under given path and with given filename and content.
+    """
     text_file = open(os.path.join(path, filename))
-    text_file.write(text)
+    text_file.write(content)
     text_file.close()
 
 

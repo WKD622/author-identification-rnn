@@ -17,6 +17,8 @@ from library.preprocessing.to_tensor.convert import text_to_tensor
 
 
 class CharactersMapper:
+    """
+    """
     data_path = None
     mapper = None
     mapped_save_path = None
