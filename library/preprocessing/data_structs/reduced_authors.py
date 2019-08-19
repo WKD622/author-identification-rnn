@@ -18,7 +18,8 @@ class ReducedAuthors:
             author: {
                 KNOWN: [],
                 UNKNOWN: {},
-                PATH: ""}
+                PATH: ""
+            }
         })
 
     def add_known(self, author: str, filename: str, content: str):
