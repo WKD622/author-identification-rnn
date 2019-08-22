@@ -8,6 +8,9 @@ from library.preprocessing.files.name_convention import check_name_convention, T
 
 
 class ReducedAuthors:
+    """
+    Class which stores reduced texts as objects, it has all helpful methods to do that.
+    """
     reduced_authors = {}
 
     def add_author(self, author: str):
@@ -15,7 +18,8 @@ class ReducedAuthors:
             author: {
                 KNOWN: [],
                 UNKNOWN: {},
-                PATH: ""}
+                PATH: ""
+            }
         })
 
     def add_known(self, author: str, filename: str, content: str):

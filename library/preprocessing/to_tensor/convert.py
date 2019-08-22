@@ -3,7 +3,20 @@ from typing import List
 import torch
 
 
-def char_to_tensor(char, alphabet):
+def char_to_tensor(char, alphabet: List):
+    """
+    Converts char to tensor using given alphabet.
+    Alphabet has to be list of chars.
+    Every sign is converted to tensor. Example:
+    If alphabet is [a, b, c], tensor for a would be [1, 0, 0]
+    1 is at first position because a is first in alphabet
+
+    Another example, if alphabet is [a, b, c, d],
+    for c tensor would be:
+    [0, 0, 1, 0] because c is at 4th position in alphabet.
+
+    If char doesn't exist in alphabet returned tensor contains only zeros.
+    """
     tensor = torch.zeros(len(alphabet))
     for counter, element in enumerate(alphabet):
         if element == char:
@@ -12,22 +25,13 @@ def char_to_tensor(char, alphabet):
 
 
 def text_to_tensor(alphabet: List, text: str):
+    """
+    Converts text to tensor. Returned tensor is actually list of "smaller".
+    Alphabet has to be list of chars.
+    tensors, each small tensor for each char in text.
+    Converting chars to tensors is caused by char_to_tensor function.
+    """
     tensor = torch.LongTensor(len(text), len(alphabet))
     for counter, char in enumerate(text):
         tensor[counter] = char_to_tensor(char, alphabet)
     return tensor
-#
-# from library.preprocessing.to_tensor.alphabets.en import alphabet as en_alphabet
-# from library.files.files import save_to_file, FileLoader
-# from library.preprocessing.chars_mapping.map import map_characters
-# from library.preprocessing.chars_mapping.mappers.en import charmap as en
-# path = "../../../data/authors/EN001/known01.txt"
-# text = ""
-# f = open(path, "r")
-# save_to_file("", "out.txt", map_characters(en, f))
-# f.close()
-#
-# fl = FileLoader("out.txt")
-# file, _ = fl.load_file()
-# torch.set_printoptions(profile="full")
-# print(text_to_tensor(file, en_alphabet))

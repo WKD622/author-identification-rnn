@@ -14,7 +14,14 @@ class NotMappedDataException(Exception):
 
 
 class NoDataSourceSpecified(Exception):
-    message = "You have to specify data source before converting to tensor"
+    message = "You have to specify data source | EXAMPLE: (data_path=/some/path)"
+
+    def __str__(self):
+        return self.message
+
+
+class NoLanguageSpecified(Exception):
+    message = "You have to specify language | EXAMPLE: (language=\"en\")"
 
     def __str__(self):
         return self.message
