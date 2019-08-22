@@ -7,7 +7,7 @@ import torch
 
 from library.preprocessing.chars_mapping.map import map_characters
 from library.preprocessing.constants import (KNOWN, UNKNOWN, LANGUAGE, DATA_PATH, MAPPED_SOURCE_PATH, MAPPED_SAVE_PATH,
-                                             REDUCED_AUTHORS, TENSORS_PATH, TENSORS)
+                                             REDUCED_AUTHORS, TENSORS_PATH, TENSORS, ONLY_REDUCE)
 from library.preprocessing.data_structs.reduced_authors import ReducedAuthors
 from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified, NoLanguageSpecified
 from library.preprocessing.files.files_operations import (check_if_directory, TextFileLoader, check_if_file,
@@ -144,6 +144,7 @@ class Preprocessing:
     kwargs = None
     language = None
     data_path = None
+    only_reduce = None
 
     def check_kwargs(self, kwargs):
         if not kwargs.get(LANGUAGE):
@@ -153,6 +154,7 @@ class Preprocessing:
         self.check_kwargs(kwargs)
         self.language = kwargs.get(LANGUAGE, 'en')
         self.data_path = kwargs.get(DATA_PATH)
+        self.only_reduce = kwargs.get(ONLY_REDUCE, False)
         self.kwargs = kwargs
         self.preprocess()
 
@@ -160,4 +162,5 @@ class Preprocessing:
         characters_mapper = CharactersMapper(**self.kwargs)
         if self.data_path:
             self.kwargs.update({REDUCED_AUTHORS: characters_mapper.get_data()})
-        ToTensor(**self.kwargs)
+        if not self.only_reduce:
+            ToTensor(**self.kwargs)
