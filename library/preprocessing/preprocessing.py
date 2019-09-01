@@ -15,6 +15,8 @@ from library.preprocessing.files.files_operations import (check_if_directory, Te
 from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
 from library.preprocessing.to_tensor.convert import text_to_tensor
 
+from library.preprocessing.batch_processing.batching import BatchProcessor
+
 
 class CharactersMapper:
     """
@@ -118,13 +120,19 @@ class ToTensor:
         torch.save(tensor, full_path)
 
     def _convert_to_tensors(self, reduced_authors: ReducedAuthors):
+        batch_processor = BatchProcessor()
         for author in reduced_authors.get_data().keys():
             known_tensor = text_to_tensor(self.alphabet, reduced_authors.get_author_merged_known(author))
             unknown_tensor = text_to_tensor(self.alphabet, reduced_authors.get_author_unknown(author))
+            batch_processor.set_params(known_tensor)
+            known_batches = batch_processor.get_batches()
+            batch_processor.set_params(unknown_tensor)
+            unknown_batches = batch_processor.get_batches()
             known_path = os.path.join(self.tensors_path, KNOWN, author)
             unknown_path = os.path.join(self.tensors_path, UNKNOWN, author)
             self.save_tensor_to_file(tensor=known_tensor, path=known_path, filename=author)
             self.save_tensor_to_file(tensor=unknown_tensor, path=unknown_path, filename=author)
+
 
     def convert(self):
         reduced_authors = ReducedAuthors()
