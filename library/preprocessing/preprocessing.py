@@ -7,7 +7,7 @@ import torch
 
 from library.preprocessing.chars_mapping.map import map_characters
 from library.preprocessing.constants import (KNOWN, UNKNOWN, LANGUAGE, DATA_PATH, MAPPED_SOURCE_PATH, MAPPED_SAVE_PATH,
-                                             REDUCED_AUTHORS, TENSORS_PATH, TENSORS)
+                                             REDUCED_AUTHORS, TENSORS_PATH, BATCH_SIZE, TENSORS)
 from library.preprocessing.data_structs.reduced_authors import ReducedAuthors
 from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified, NoLanguageSpecified
 from library.preprocessing.files.files_operations import (check_if_directory, TextFileLoader, check_if_file,
@@ -93,6 +93,7 @@ class ToTensor:
     mapped_source_path = None
     reduced_authors = None
     converted = False
+    batch_size = 20
 
     def __init__(self, language: str, **kwargs):
         self.mapped_source_path = kwargs.get(MAPPED_SOURCE_PATH)
@@ -104,6 +105,7 @@ class ToTensor:
         if not self.tensors_path:
             self.tensors_path = TENSORS
         self.reduced_authors = kwargs.get(REDUCED_AUTHORS)
+        self.batch_size = kwargs.get(BATCH_SIZE)
         self.convert()
 
     def preparation(self):
@@ -120,18 +122,18 @@ class ToTensor:
         torch.save(tensor, full_path)
 
     def _convert_to_tensors(self, reduced_authors: ReducedAuthors):
-        batch_processor = BatchProcessor()
+        batch_processor = BatchProcessor(self.batch_size)
         for author in reduced_authors.get_data().keys():
             known_tensor = text_to_tensor(self.alphabet, reduced_authors.get_author_merged_known(author))
             unknown_tensor = text_to_tensor(self.alphabet, reduced_authors.get_author_unknown(author))
-            batch_processor.set_params(known_tensor)
+            batch_processor.set_tensor(known_tensor)
             known_batches = batch_processor.get_batches()
-            batch_processor.set_params(unknown_tensor)
+            batch_processor.set_tensor(unknown_tensor)
             unknown_batches = batch_processor.get_batches()
             known_path = os.path.join(self.tensors_path, KNOWN, author)
             unknown_path = os.path.join(self.tensors_path, UNKNOWN, author)
-            self.save_tensor_to_file(tensor=known_tensor, path=known_path, filename=author)
-            self.save_tensor_to_file(tensor=unknown_tensor, path=unknown_path, filename=author)
+            self.save_tensor_to_file(tensor=known_batches, path=known_path, filename=author)
+            self.save_tensor_to_file(tensor=unknown_batches, path=unknown_path, filename=author)
 
 
     def convert(self):

@@ -6,13 +6,12 @@ class BatchProcessor:
     batch_tensor = None
     batches = []
 
-    def __init__(self):
+    def __init__(self, batch_size=20):
         self.input_tensor = None
-        self.batch_size = None
-
-    def set_params(self, input_tensor: torch.LongTensor, batch_size=20):
-        self.input_tensor = input_tensor
         self.batch_size = batch_size
+
+    def set_tensor(self, input_tensor: torch.LongTensor):
+        self.input_tensor = input_tensor
         self.process()
 
     def process(self):
