@@ -15,9 +15,6 @@ from library.preprocessing.files.files_operations import (check_if_directory, Te
 from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
 from library.preprocessing.to_tensor.convert import text_to_tensor
 
-from library.preprocessing.batch_processing.batching import BatchProcessor
-
-
 class CharactersMapper:
     """
     """
