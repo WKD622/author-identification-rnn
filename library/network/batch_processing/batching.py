@@ -28,7 +28,7 @@ class BatchProcessor:
     def set_tensors(self):
         batches = numpy.zeros((self.batch_size, self.timesteps, self.vocab_size), dtype=int)
         for x in range(0, self.batch_size):
-            index = randint(1, 100)
+            index = randint(1, self.authors_size)
             self.authors_order.append(index)
             input_tensor = self.load_tensor(index)
             for y in range(0, self.timesteps):
