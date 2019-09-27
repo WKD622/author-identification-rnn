@@ -17,7 +17,7 @@ def char_to_tensor(char, alphabet: List):
 
     If char doesn't exist in alphabet returned tensor contains only zeros.
     """
-    tensor = torch.zeros(len(alphabet))
+    tensor = [0 for i in range(len(alphabet))]
     for counter, element in enumerate(alphabet):
         if element == char:
             tensor[counter] = 1
@@ -31,7 +31,7 @@ def text_to_tensor(alphabet: List, text: str):
     tensors, each small tensor for each char in text.
     Converting chars to tensors is caused by char_to_tensor function.
     """
-    tensor = torch.LongTensor(len(text), len(alphabet))
+    tensor = []
     for counter, char in enumerate(text):
-        tensor[counter] = char_to_tensor(char, alphabet)
+        tensor.append(char_to_tensor(char, alphabet))
     return tensor

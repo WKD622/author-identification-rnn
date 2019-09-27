@@ -2,6 +2,7 @@
   <dictionary name="kuba">
     <words>
       <w>charmap</w>
+      <w>lstm</w>
       <w>nfkd</w>
       <w>nullmapper</w>
       <w>preprocessing</w>

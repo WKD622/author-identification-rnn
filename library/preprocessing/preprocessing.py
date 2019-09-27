@@ -132,8 +132,10 @@ class ToTensor:
             unknown_batches = batch_processor.get_batches()
             known_path = os.path.join(self.tensors_path, KNOWN, author)
             unknown_path = os.path.join(self.tensors_path, UNKNOWN, author)
-            self.save_tensor_to_file(tensor=known_batches, path=known_path, filename=author)
-            self.save_tensor_to_file(tensor=unknown_batches, path=unknown_path, filename=author)
+            known_converted_batches = torch.tensor(known_batches)
+            unknown_converted_batches = torch.tensor(unknown_batches)
+            self.save_tensor_to_file(tensor=known_converted_batches, path=known_path, filename=author)
+            self.save_tensor_to_file(tensor=unknown_converted_batches, path=unknown_path, filename=author)
 
 
     def convert(self):
