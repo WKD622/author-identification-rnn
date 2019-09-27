@@ -17,19 +17,6 @@ for i in range(number_of_authors):
     file_loader = FileLoader(base_path + '/' + str(i + 1) + '.txt')
     files.append(file_loader.load_file()[0])
 
-print(files[0])
-print(files[1])
-print(files[2])
-
-for i in range(number_of_authors):
-    # TODO
-    #
-    #
-    #
-    #  Preprocessing
-    pass
-
-
 # for target in folders['problems']:
 #     corpus_1 = TextProcess()
 #     corpus_list.append(corpus_1.get_data(base_path + '/' + target + '/known01.txt'))
