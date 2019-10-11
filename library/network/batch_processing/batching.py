@@ -2,7 +2,7 @@ import torch
 from random import randint
 import numpy
 
-tensors_dir = '../../../data/tensors/known/'
+tensors_dir = '../../data/tensors/known/'
 
 
 class BatchProcessor:
@@ -29,7 +29,7 @@ class BatchProcessor:
         batches = numpy.zeros((self.batch_size, self.timesteps, self.vocab_size), dtype=int)
         for x in range(0, self.batch_size):
             index = randint(1, self.authors_size)
-            self.authors_order.append(index)
+            self.authors_order.append(index-1)
             input_tensor = self.load_tensor(index)
             for y in range(0, self.timesteps):
                 batches[x][y] = input_tensor[y]
@@ -42,31 +42,35 @@ class BatchProcessor:
         tensor = torch.load(path)
         return tensor
 
-    def create_labels(self):
-        labels = numpy.zeros((self.batch_size, self.authors_size), dtype=int)
-        for i in range(0, self.batch_size):
-            author_index = self.authors_order[i]
-            labels[i][author_index] = 1
-
-        self.labels = torch.from_numpy(labels)
+    # def create_labels(self):
+    #     labels = numpy.zeros((self.batch_size, self.authors_size), dtype=int)
+    #     for i in range(0, self.batch_size):
+    #         author_index = self.authors_order[i]
+    #         labels[i][author_index] = 1
+    #
+    #     self.labels = torch.from_numpy(labels)
 
     def process(self):
         self.set_tensors()
-        self.create_labels()
+        # self.create_labels()
+
+    def next_batches(self):
+        self.process()
+        return self.batches, self.authors_order
 
     def get_batches(self):
         return self.batches
 
     def get_labels(self):
-        return self.labels
+        return self.authors_order
 
     def get_results(self):
-        return self.batches, self.labels
+        return self.batches, self.authors_order
 
 
 # t = torch.LongTensor(140)
 # test = BatchProcessor(t)
 # print(test.get_batches())
 
-x = BatchProcessor()
+# x = BatchProcessor()
 # x.set_tensors()
