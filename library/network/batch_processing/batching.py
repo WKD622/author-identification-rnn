@@ -75,15 +75,19 @@ class BatchProcessor:
     def get_labels(self):
         return self.authors_order
 
-    def has_next_batch(self):
+    def new_epoch(self):
+        self.authors_usage = numpy.zeros(self.authors_size + 1, dtype=int)
+        self.has_next_batch = True
+
+    def next_batch(self):
         return self.has_next_batch
 
     def get_results(self):
         self.batches = []
         self.authors_order = []
-        if self.has_next_batch:
-            self.process()
-            return self.batches, self.authors_order
+        # if self.has_next_batch:
+        self.process()
+        return self.batches, self.authors_order
         # else:
 #             throw error
 
