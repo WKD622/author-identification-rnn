@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm
+import sys 
+
+sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 
 from library.network.batch_processing.batching import BatchProcessor
 from library.preprocessing.to_tensor.alphabets.en_alphabet import alphabet as en
@@ -33,10 +36,10 @@ class TextGenerator(nn.Module):
 model = TextGenerator(authors_size, vocab_size, hidden_size, num_layers)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-batch_processor = BatchProcessor(batch_size=batch_size, authors_size=authors_size, timesteps=timesteps)
 
-while True:
-    j = 0
+j = 0
+while j < 2:
+    batch_processor = BatchProcessor(batch_size=batch_size, authors_size=authors_size, timesteps=timesteps)
     i = 0
     j += 1
     print(j)
