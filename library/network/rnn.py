@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.nn.utils import clip_grad_norm
+from torch.nn.utils import clip_grad_norm_
 import sys 
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
@@ -9,14 +9,14 @@ from library.network.batch_processing.batching import BatchProcessor
 from library.preprocessing.to_tensor.alphabets.en_alphabet import alphabet as en
 
 hidden_size = 100
-num_layers = 2
+num_layers = int(sys.argv[1])
 num_epochs = 5
 batch_size = 40
 timesteps = 50
 learning_rate = 0.004
 authors_size = 100
 vocab_size = len(en)
-save_path = "result"
+
 
 
 class TextGenerator(nn.Module):
@@ -34,35 +34,39 @@ class TextGenerator(nn.Module):
 
 
 model = TextGenerator(authors_size, vocab_size, hidden_size, num_layers)
+# model.load_state_dict(torch.load(save_path))
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 j = 0
-while j < 2:
+while True:
     batch_processor = BatchProcessor(batch_size=batch_size, authors_size=authors_size, timesteps=timesteps)
     i = 0
     j += 1
-    print(j)
+    losses = []
     for epoch in range(num_epochs):
         states = (torch.zeros(num_layers, batch_size, hidden_size),
                   torch.zeros(num_layers, batch_size, hidden_size))
 
         i += 1
         batch_processor.new_epoch()
+        losses = []
         while batch_processor.next_batch():
-            batches = batch_processor.get_results()[0]
-            labels = batch_processor.get_results()[1]
+            batches, labels = batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
             target = torch.tensor(labels)
             outputs, _ = model(batches, states)
             loss = loss_fn(outputs, target)
+            losses.append(loss.item())
 
             model.zero_grad()
             loss.backward()
-            clip_grad_norm(model.parameters(), 0.5)
+            clip_grad_norm_(model.parameters(), 0.5)
             optimizer.step()
 
             step = (i + 1) // timesteps
 
-        print('Epoch [{}/{}], Loss: {:4f}'.format(epoch + 1, num_epochs, loss.item()))
+    if j % 100 == 0:
+        loss_avg = sum(losses) / len(losses)
+        save_path = 'results'+str(num_layers)+'/'+str(j)+'loss:'+str(loss_avg)
     torch.save(model.state_dict(), save_path)

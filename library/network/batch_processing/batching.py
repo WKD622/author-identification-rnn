@@ -19,7 +19,7 @@ class BatchProcessor:
     max_length = None
     has_next_batch = True
 
-    def __init__(self, batch_size=20, authors_size=100, timesteps=30, language='EN', vocab_size=40):
+    def __init__(self, batch_size=40, authors_size=100, timesteps=30, language='EN', vocab_size=40):
         self.batch_size = batch_size
         self.timesteps = timesteps
         self.authors_size = authors_size
@@ -38,11 +38,16 @@ class BatchProcessor:
 
     def set_tensors(self):
         batches = numpy.zeros((self.batch_size, self.timesteps, self.vocab_size), dtype=int)
+        forbidden_index = []
         for x in range(0, self.batch_size):
             index = randint(1, self.authors_size)
+            if index in forbidden_index:
+                while index in forbidden_index:
+                    index = randint(1, self.authors_size)
             self.authors_order.append(index-1)
             self.authors_usage[index] += 1
             if self.authors_usage[index] == self.max_length:
+                forbidden_index.append(index)
                 self.has_next_batch = False
             input_tensor = self.load_tensor(index)
             delta = self.authors_usage[index]*self.timesteps
@@ -92,6 +97,7 @@ class BatchProcessor:
 #             throw error
 
 
+
 # t = torch.LongTensor(140)
 # test = BatchProcessor(t)
 # print(test.get_batches())
@@ -100,4 +106,5 @@ class BatchProcessor:
 # # x.set_tensors()
 
 # x = BatchProcessor()
-# x.get_results()
+# while(x.next_batch()):
+#     x.get_results()
