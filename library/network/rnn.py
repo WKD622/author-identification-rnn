@@ -69,4 +69,4 @@ while True:
     if j % 100 == 0:
         loss_avg = sum(losses) / len(losses)
         save_path = 'results'+str(num_layers)+'/'+str(j)+'loss:'+str(loss_avg)
-    torch.save(model.state_dict(), save_path)
+        torch.save(model.state_dict(), save_path)
