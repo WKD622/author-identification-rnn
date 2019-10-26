@@ -2,17 +2,17 @@ import torch
 from random import randint, choice
 import numpy
 
-tensors_dir = '../../../data/tensors/known/'
 truth_dir = '../../../data/'
 
 
 class EvaluationBatchProcessor:
-    def __init__(self, batch_size=40, authors_size=100, timesteps=30, language='EN', vocab_size=40):
+    def __init__(self, tensors_dir, language, authors_size, vocab_size, batch_size, timesteps):
         self.batch_size = batch_size
         self.timesteps = timesteps
         self.authors_size = authors_size
         self.language = language
         self.vocab_size = vocab_size
+        self.tensors_dir = tensors_dir
         self.authors_usage = numpy.zeros(authors_size+1, dtype=int)
         self.set_max_length()
         self.parse_truth()
@@ -56,7 +56,7 @@ class EvaluationBatchProcessor:
     def load_tensor(self, index):
         idx = str(index).zfill(3)
         dir_name = self.language + idx
-        path = tensors_dir + dir_name + '/' + dir_name + '.pt'
+        path = self.tensors_dir + dir_name + '/' + dir_name + '.pt'
         tensor = torch.load(path)
         return tensor
 

@@ -3,7 +3,9 @@ import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
 from library.network.batch_processing.batching import BatchProcessor
+from library.network.batch_processing.evaluation_batches import EvaluationBatchProcessor
 from library.network.model import TextGenerator
+from library.preprocessing.files.files_operations import create_file
 
 
 class Train:
@@ -18,7 +20,6 @@ class Train:
         self.learning_rate = learning_rate
         self.authors_size = authors_size
         self.vocab_size = vocab_size
-        self.path = save_path
         self.tensors_path = tensors_path
         self.language = language
 
@@ -30,9 +31,10 @@ class Train:
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.learning_rate)
+        self.output_manager = OutputManager(save_path=save_path)
 
     def train(self):
-        outer_counter = 0
+        counter = 0
         while True:
             batch_processor = BatchProcessor(tensors_dir=self.tensors_path,
                                              batch_size=self.batch_size,
@@ -40,16 +42,13 @@ class Train:
                                              timesteps=self.timesteps,
                                              language=self.language,
                                              vocab_size=self.vocab_size)
-            outer_counter += 1
-            epochs_counter = 0
             losses = []
+            counter += 1
             for epoch in range(self.num_epochs):
                 states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                           torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-                epochs_counter += 1
                 batch_processor.new_epoch()
-                losses = []
                 while batch_processor.next_batch():
                     batches, labels = batch_processor.get_results()
                     batches = batches.type(torch.FloatTensor)
@@ -63,20 +62,47 @@ class Train:
                     clip_grad_norm_(self.model.parameters(), 0.5)
                     self.optimizer.step()
 
-            self.output(outer_counter, losses)
+            self.output_manager.next_output(model=self.model,
+                                            losses=losses,
+                                            accuracy=self.get_accuracy(),
+                                            epoch_number=self.num_epochs * counter)
 
-    def give_output(self, outer_counter, losses):
-        pass
+    def get_accuracy(self):
+        return 1
 
-    def save_model(self, outer_counter, losses):
-        if outer_counter % 1 == 0:
-            loss_avg = sum(losses) / len(losses)
-            save_path = self.path + '/' + str(outer_counter) + 'loss:' + str(loss_avg)
-            torch.save(self.model.state_dict(), save_path)
 
-    def output(self, outer_counter, losses):
-        self.save_model(outer_counter, losses)
-        self.give_output(outer_counter, losses)
+class OutputManager:
+    FILENAME = 'results'
 
-    def accuracy(self, labels, target):
-        pass
+    def __init__(self, save_path):
+        self.save_path = save_path
+        self.initialize_files()
+        self.outputs_counter = 1
+
+    def next_output(self, model, losses, accuracy, epoch_number):
+        loss_avg = sum(losses) / len(losses)
+        self.save_model(model)
+        self.console_output(losses, accuracy, epoch_number)
+        self.file_output(losses, accuracy, epoch_number)
+        self.outputs_counter += 1
+
+    def console_output(self, losses, accuracy, epoch_number):
+        print(str(self.outputs_counter) +
+              ' epoch: ' + str(epoch_number) +
+              ' loss: ' + losses +
+              ' accuracy: ' + accuracy)
+
+    def save_model(self, model):
+        save_path = self.save_path + '/' + str(self.outputs_counter)
+        torch.save(model.state_dict(), save_path)
+
+    def file_output(self, losses, accuracy, epoch_number):
+        with open(self.save_path + '/' + self.FILENAME, 'a') as results:
+            results.write(str(self.outputs_counter) +
+                          ' epoch: ' + str(epoch_number) +
+                          ' loss: ' + losses +
+                          ' accuracy: ' + accuracy)
+            results.close()
+
+    def initialize_files(self):
+        create_file(self.save_path, self.FILENAME)
