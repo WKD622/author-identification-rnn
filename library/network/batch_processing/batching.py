@@ -17,7 +17,7 @@ class BatchProcessor:
     max_length = None
     has_next_batch = True
 
-    def __init__(self, tensors_dir, batch_size=40, authors_size=100, timesteps=30, language='EN', vocab_size=48):
+    def __init__(self, tensors_dir, language, authors_size, vocab_size, batch_size, timesteps):
         self.batch_size = batch_size
         self.timesteps = timesteps
         self.authors_size = authors_size

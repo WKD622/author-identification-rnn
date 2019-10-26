@@ -1,20 +1,15 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
-import sys
 
-sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
-
-from library.network.model import TextGenerator
 from library.network.batch_processing.batching import BatchProcessor
-from library.preprocessing.to_tensor.alphabets.en_alphabet import alphabet as en
-from library.preprocessing.to_tensor.alphabets.nl_alphabet import alphabet as nl
+from library.network.model import TextGenerator
 
 
 class Train:
 
     def __init__(self, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate, authors_size,
-                 save_path, tensors_dir, language):
+                 save_path, tensors_path, language, vocab_size):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_epochs = num_epochs
@@ -22,9 +17,9 @@ class Train:
         self.timesteps = timesteps
         self.learning_rate = learning_rate
         self.authors_size = authors_size
-        self.vocab_size = len(nl)
+        self.vocab_size = vocab_size
         self.path = save_path
-        self.tensors_dir = tensors_dir
+        self.tensors_path = tensors_path
         self.language = language
 
         self.model = TextGenerator(self.authors_size,
@@ -39,11 +34,12 @@ class Train:
     def train(self):
         outer_counter = 0
         while True:
-            batch_processor = BatchProcessor(tensors_dir=self.tensors_dir,
+            batch_processor = BatchProcessor(tensors_dir=self.tensors_path,
                                              batch_size=self.batch_size,
                                              authors_size=self.authors_size,
                                              timesteps=self.timesteps,
-                                             language=self.language)
+                                             language=self.language,
+                                             vocab_size=self.vocab_size)
             outer_counter += 1
             epochs_counter = 0
             losses = []
