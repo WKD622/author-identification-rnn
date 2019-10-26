@@ -23,10 +23,14 @@ class Train:
         self.vocab_size = len(en)
         self.path = path
 
-        self.model = TextGenerator(self.authors_size, self.vocab_size, self.hidden_size, self.num_layers,
+        self.model = TextGenerator(self.authors_size,
+                                   self.vocab_size,
+                                   self.hidden_size,
+                                   self.num_layers,
                                    self.timesteps)
         self.loss_fn = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(),
+                                          lr=self.learning_rate)
 
     def train(self):
         outer_counter = 0
