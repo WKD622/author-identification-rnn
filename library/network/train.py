@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
@@ -5,7 +7,8 @@ from torch.nn.utils import clip_grad_norm_
 from library.network.batch_processing.batching import BatchProcessor
 from library.network.batch_processing.evaluation_batches import EvaluationBatchProcessor
 from library.network.model import TextGenerator
-from library.preprocessing.files.files_operations import create_file
+from library.preprocessing.files.files_operations import (create_file, append_to_file, create_directory,
+                                                          remove_directory)
 
 
 class Train:
@@ -31,7 +34,15 @@ class Train:
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.learning_rate)
-        self.output_manager = OutputManager(save_path=save_path)
+        self.output_manager = OutputManager(save_path=save_path,
+                                            hidden_size=hidden_size,
+                                            num_epochs=num_epochs,
+                                            num_layers=num_layers,
+                                            batch_size=batch_size,
+                                            timesteps=timesteps,
+                                            learning_rate=learning_rate,
+                                            authors_size=authors_size,
+                                            vocab_size=vocab_size)
 
     def train(self):
         counter = 0
@@ -72,37 +83,78 @@ class Train:
 
 
 class OutputManager:
-    FILENAME = 'results'
+    EPOCH = 'epoch'
+    LOSS = 'loss'
+    ACCURACY = 'accuracy'
+    MODEL = 'model'
+    RESULTS_FILENAME = 'results.csv'
+    NETWORK_INFO_FILENAME = 'network_info.txt'
+    SEPARATOR = ','
+    HEADLINE = MODEL + SEPARATOR + EPOCH + SEPARATOR + LOSS + SEPARATOR + ACCURACY + '\n'
+    MODELS_FOLDER_NAME = 'models'
 
-    def __init__(self, save_path):
-        self.save_path = save_path
+    def __init__(self, save_path, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate,
+                 authors_size, vocab_size):
+        self.models_path = os.path.join(save_path, self.MODELS_FOLDER_NAME)
+        self.results_path = save_path
+
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
+        self.timesteps = timesteps
+        self.learning_rate = learning_rate
+        self.authors_size = authors_size
+        self.vocab_size = vocab_size
+
         self.initialize_files()
         self.outputs_counter = 1
 
     def next_output(self, model, losses, accuracy, epoch_number):
         loss_avg = sum(losses) / len(losses)
         self.save_model(model)
-        self.console_output(losses, accuracy, epoch_number)
-        self.file_output(losses, accuracy, epoch_number)
+        self.console_output(loss_avg, accuracy, epoch_number)
+        self.file_output(loss_avg, accuracy, epoch_number)
         self.outputs_counter += 1
 
-    def console_output(self, losses, accuracy, epoch_number):
+    def console_output(self, loss_avg, accuracy, epoch_number):
         print(str(self.outputs_counter) +
-              ' epoch: ' + str(epoch_number) +
-              ' loss: ' + losses +
-              ' accuracy: ' + accuracy)
+              ' ' + self.EPOCH + ': ' + str(epoch_number) +
+              ' ' + self.LOSS + ': ' + str(loss_avg) +
+              ' ' + self.ACCURACY + ': ' + str(accuracy))
 
     def save_model(self, model):
-        save_path = self.save_path + '/' + str(self.outputs_counter)
+        save_path = os.path.join(self.models_path, str(self.outputs_counter))
         torch.save(model.state_dict(), save_path)
 
-    def file_output(self, losses, accuracy, epoch_number):
-        with open(self.save_path + '/' + self.FILENAME, 'a') as results:
-            results.write(str(self.outputs_counter) +
-                          ' epoch: ' + str(epoch_number) +
-                          ' loss: ' + losses +
-                          ' accuracy: ' + accuracy)
-            results.close()
+    def file_output(self, loss_avg, accuracy, epoch_number):
+        file_path = os.path.join(self.results_path, self.RESULTS_FILENAME)
+        append_to_file(file_path,
+                       str(self.outputs_counter) +
+                       self.SEPARATOR + str(epoch_number) +
+                       self.SEPARATOR + str(loss_avg) +
+                       self.SEPARATOR + str(accuracy) + '\n')
 
     def initialize_files(self):
-        create_file(self.save_path, self.FILENAME)
+        remove_directory(self.results_path)
+        create_file(filename=self.RESULTS_FILENAME, path=self.results_path)
+        create_file(filename=self.NETWORK_INFO_FILENAME, path=self.results_path)
+        self.add_results_headline()
+        self.add_network_info()
+        create_directory(self.models_path)
+
+    def add_results_headline(self):
+        path = os.path.join(self.results_path, self.RESULTS_FILENAME)
+        append_to_file(path, self.HEADLINE)
+
+    def add_network_info(self):
+        path = os.path.join(self.results_path, self.NETWORK_INFO_FILENAME)
+        append_to_file(path,
+                       'num_layers: ' + str(self.num_layers) + '\n' +
+                       'hidden_size: ' + str(self.hidden_size) + '\n' +
+                       'batch_size: ' + str(self.batch_size) + '\n' +
+                       'timesteps: ' + str(self.timesteps) + '\n' +
+                       'learning_rate: ' + str(self.learning_rate) + '\n' +
+                       'num_epochs: ' + str(self.num_epochs) + '\n' +
+                       'vocab_size: ' + str(self.vocab_size) + '\n' +
+                       'authors_size: ' + str(self.authors_size) + '\n')

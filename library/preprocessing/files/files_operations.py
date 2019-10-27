@@ -74,3 +74,16 @@ def create_file(filename: str, path: str, content=""):
 
 def remove_directory(path):
     shutil.rmtree(path)
+
+
+def create_directory(path):
+    try:
+        os.mkdir(path)
+    except OSError:
+        print("Creation of the directory %s failed" % path)
+
+
+def append_to_file(path, to_append):
+    with open(path, 'a') as file:
+        file.write(to_append)
+        file.close()
