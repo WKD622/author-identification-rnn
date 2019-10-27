@@ -5,10 +5,9 @@ import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
 from library.network.batch_processing.batching import BatchProcessor
-from library.network.batch_processing.evaluation_batches import EvaluationBatchProcessor
 from library.network.model import TextGenerator
-from library.preprocessing.files.files_operations import (create_file, append_to_file, create_directory,
-                                                          remove_directory)
+from library.helpers.files.files_operations import (create_file, append_to_file, create_directory,
+                                                    remove_directory, check_if_directory)
 
 
 class Train:
@@ -79,12 +78,12 @@ class Train:
                                             epoch_number=self.num_epochs * counter)
 
     def get_accuracy(self):
-        batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
-                                                   batch_size=self.batch_size,
-                                                   authors_size=self.authors_size,
-                                                   timesteps=self.timesteps,
-                                                   language=self.language,
-                                                   vocab_size=self.vocab_size)
+        # batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
+        #                                            batch_size=self.batch_size,
+        #                                            authors_size=self.authors_size,
+        #                                            timesteps=self.timesteps,
+        #                                            language=self.language,
+        #                                            vocab_size=self.vocab_size)
         # TODO
         return 1.1
 
@@ -143,7 +142,8 @@ class OutputManager:
                        self.SEPARATOR + str(accuracy) + '\n')
 
     def initialize_files(self):
-        remove_directory(self.results_path)
+        if check_if_directory(self.results_path):
+            remove_directory(self.results_path)
         create_file(filename=self.RESULTS_FILENAME, path=self.results_path)
         create_file(filename=self.NETWORK_INFO_FILENAME, path=self.results_path)
         self.add_results_headline()

@@ -3,8 +3,8 @@ import re
 from typing import List
 
 from library.preprocessing.constants import KNOWN, UNKNOWN, PATH, FILENAME, CONTENT
-from library.preprocessing.files.files_operations import create_file, check_if_directory, check_if_file, TextFileLoader
-from library.preprocessing.files.name_convention import check_name_convention, TEXT_NAME_CONVENTIONS, KNOWN_AUTHOR
+from library.helpers.files.files_operations import create_file, check_if_directory, check_if_file, TextFileLoader
+from library.helpers.files.name_convention import check_name_convention, TEXT_NAME_CONVENTIONS, KNOWN_AUTHOR
 
 
 class ReducedAuthors:

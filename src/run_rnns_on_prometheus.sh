@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-results=/net/people/plgjakubziarko/results
+results=results
 to_run=(
     100, # hidden_size
     2, # num_layers
@@ -16,5 +16,8 @@ to_run=(
 )
 
 for i in "${to_run[@]}" ; do
-    IFS=","; set ${i}; echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11};
+    IFS=",";
+    set ${i};
+    mkdir -p ${results}/$9
+    echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11};
 done

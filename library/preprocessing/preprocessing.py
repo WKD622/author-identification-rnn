@@ -10,10 +10,11 @@ from library.preprocessing.constants import (KNOWN, UNKNOWN, LANGUAGE, DATA_PATH
                                              REDUCED_AUTHORS, TENSORS_PATH, BATCH_SIZE, TENSORS)
 from library.preprocessing.data_structs.reduced_authors import ReducedAuthors
 from library.preprocessing.exceptions import NotMappedDataException, NoDataSourceSpecified, NoLanguageSpecified
-from library.preprocessing.files.files_operations import (check_if_directory, TextFileLoader, check_if_file,
-                                                          check_if_directory_exists, remove_directory)
-from library.preprocessing.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
+from library.helpers.files.files_operations import (check_if_directory, TextFileLoader, check_if_file,
+                                                    check_if_directory_exists, remove_directory)
+from library.helpers.files.name_convention import TEXT_NAME_CONVENTIONS, check_name_convention, KNOWN_AUTHOR
 from library.preprocessing.to_tensor.convert import text_to_tensor
+
 
 class CharactersMapper:
     """
@@ -126,7 +127,6 @@ class ToTensor:
             unknown_path = os.path.join(self.tensors_path, UNKNOWN, author)
             self.save_tensor_to_file(tensor=known_tensor, path=known_path, filename=author)
             self.save_tensor_to_file(tensor=unknown_tensor, path=unknown_path, filename=author)
-
 
     def convert(self):
         reduced_authors = ReducedAuthors()

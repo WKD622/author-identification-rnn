@@ -1,4 +1,4 @@
-from library.preprocessing.files import FileLoader
+from library.helpers.files import FileLoader
 
 embed_size = 150
 hidden_size = 1024

@@ -1,8 +1,4 @@
-import os
 import re
-
-from library.preprocessing.exceptions import WrongDataStructureException
-from library.preprocessing.files.files_operations import check_if_directory, check_if_file
 
 KNOWN_AUTHOR = '^known(\d+)\.txt$'
 UNKNOWN_AUTHOR = '^unknown\.txt$'
