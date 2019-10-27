@@ -1,6 +1,7 @@
 env/
 data/
 src/results
+src/scripts
 *.pyc
 __pycache__/
 

@@ -32,7 +32,7 @@ length = len(json)
 
 for i in range(length):
     json_el = json[i]
-    directory_path = json_el[SAVE_PATH]
+    directory_path = 'scripts'
     filename = 'run-' + json_el[NAME].split()[2] + '.sh'
     file_path = os.path.join(directory_path, filename)
     create_file(filename=filename, path=directory_path)
