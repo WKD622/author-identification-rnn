@@ -79,7 +79,14 @@ class Train:
                                             epoch_number=self.num_epochs * counter)
 
     def get_accuracy(self):
-        return 1
+        batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
+                                                   batch_size=self.batch_size,
+                                                   authors_size=self.authors_size,
+                                                   timesteps=self.timesteps,
+                                                   language=self.language,
+                                                   vocab_size=self.vocab_size)
+        # TODO
+        return 1.1
 
 
 class OutputManager:
