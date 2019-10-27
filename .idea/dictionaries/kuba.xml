@@ -6,6 +6,7 @@
       <w>nfkd</w>
       <w>nullmapper</w>
       <w>preprocessing</w>
+      <w>sbatch</w>
       <w>tensored</w>
       <w>timesteps</w>
     </words>
