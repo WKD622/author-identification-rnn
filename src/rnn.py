@@ -1,7 +1,6 @@
-from library.network.train import Train
 import sys
-
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
+from library.network.train import Train
 
 rnn = Train(hidden_size=int(sys.argv[1]),
             num_layers=int(sys.argv[2]),
