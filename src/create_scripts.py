@@ -37,6 +37,7 @@ length = len(json)
 
 for i in range(length):
     json_el = json[i]
+    print(os.path.join("results", json_el[NAME].split()[2]))
     results_path = 'results'
     directory_path = 'scripts'
     task_name = json_el[NAME].split()[2]
@@ -63,9 +64,9 @@ for i in range(length):
         file.write(NEW_LINE)
         file.write(json_el[PARTITION])
         file.write(NEW_LINE)
-        file.write(json_el[OUTPUT] + "output-" + task_name + ".out")
+        file.write(json_el[OUTPUT] + "./results/" + task_name + "/output-" + task_name + ".out")
         file.write(NEW_LINE)
-        file.write(json_el[ERRORS] + "errors-" + task_name + ".err")
+        file.write(json_el[ERRORS] + "./results/" + task_name + "/errors-" + task_name + ".err")
         file.write(NEW_LINE)
         file.write('cd $SLURM_SUBMIT_DIR')
         file.write(NEW_LINE + NEW_LINE + NEW_LINE)
