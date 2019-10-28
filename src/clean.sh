@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-rm -rf ./scripts ./results errors* output*
+rm -rf ./scripts ./results errors* output* ./plots
