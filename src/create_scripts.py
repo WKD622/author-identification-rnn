@@ -79,7 +79,7 @@ for i in range(length):
                                                                               json_el[LEARNING_RATE],
                                                                               json_el[AUTHORS_SIZE],
                                                                               json_el[VOCAB_SIZE],
-                                                                              os.path.join(json_el[SAVE_PATH],
+                                                                              os.path.join("results",
                                                                                            json_el[NAME].split()[2]),
                                                                               json_el[TENSORS_PATH],
                                                                               json_el[LANGUAGE]))
