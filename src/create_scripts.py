@@ -4,7 +4,7 @@ import sys
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 
-from library.helpers.files.files_operations import (create_file)
+from library.helpers.files.files_operations import (create_file, create_directory, check_if_directory)
 from library.helpers.files.json_loader import JsonFileLoader
 
 BEGINNING = "beginning"
@@ -37,9 +37,14 @@ length = len(json)
 for i in range(length):
     json_el = json[i]
     directory_path = 'scripts'
-    filename = 'run-' + json_el[NAME].split()[2] + '.sh'
+    task_name = json_el[NAME].split()[2]
+    filename = 'run-' + task_name + '.sh'
     file_path = os.path.join(directory_path, filename)
     create_file(filename=filename, path=directory_path)
+    results_dir = os.path.join("results", task_name)
+    if check_if_directory(results_dir):
+        create_directory(results_dir)
+
     with open(file_path, 'a') as file:
         file.write(json_el[BEGINNING])
         file.write(NEW_LINE)
@@ -55,9 +60,9 @@ for i in range(length):
         file.write(NEW_LINE)
         file.write(json_el[PARTITION])
         file.write(NEW_LINE)
-        file.write(json_el[OUTPUT] + "-" + json_el[NAME].split()[2] + ".out")
+        file.write(json_el[OUTPUT] + "/" + results_dir + "/output-" + task_name + ".out")
         file.write(NEW_LINE)
-        file.write(json_el[ERRORS] + "-" + json_el[NAME].split()[2] + ".err")
+        file.write(json_el[ERRORS] + "/" + results_dir + "/errors-" + task_name + ".err")
         file.write(NEW_LINE)
         file.write('cd $SLURM_SUBMIT_DIR')
         file.write(NEW_LINE + NEW_LINE + NEW_LINE)
