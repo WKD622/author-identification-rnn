@@ -3,7 +3,9 @@ import os
 import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
+import sys
 
+sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.network.batch_processing.batching import BatchProcessor
 from library.network.model import TextGenerator
 from library.helpers.files.files_operations import (create_file, append_to_file, create_directory,
