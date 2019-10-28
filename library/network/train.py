@@ -5,6 +5,8 @@ import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 import sys
 
+from library.network.batch_processing.evaluation_batches import EvaluationBatchProcessor
+
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.network.batch_processing.batching import BatchProcessor
 from library.network.model import TextGenerator
@@ -80,14 +82,28 @@ class Train:
                                             epoch_number=self.num_epochs * counter)
 
     def get_accuracy(self):
-        # batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
-        #                                            batch_size=self.batch_size,
-        #                                            authors_size=self.authors_size,
-        #                                            timesteps=self.timesteps,
-        #                                            language=self.language,
-        #                                            vocab_size=self.vocab_size)
-        # TODO
-        return 1.1
+        evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
+                                                   batch_size=self.batch_size,
+                                                   authors_size=self.authors_size,
+                                                   timesteps=self.timesteps,
+                                                   language=self.language,
+                                                   vocab_size=self.vocab_size)
+
+        states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
+                  torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
+        evaluation_batch_processor.new_epoch()
+        matches, total = 0, 0
+        while evaluation_batch_processor.next_batch():
+            batches, labels = evaluation_batch_processor.get_results()
+            batches = batches.type(torch.FloatTensor)
+            target = torch.tensor(labels)
+            outputs, _ = self.model(batches, states)
+            scores=nn.functional.softmax(outputs, dim=1)
+            _, predictions = scores.max(dim=1)
+            matches += torch.eq(predictions, target).sum().item()
+            total += torch.numel(predictions)
+
+        return matches/total
 
 
 class OutputManager:

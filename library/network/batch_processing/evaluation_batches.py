@@ -2,10 +2,24 @@ import torch
 from random import randint, choice
 import numpy
 
-truth_dir = '../../../data/'
+truth_dir = '../data/'
 
 
 class EvaluationBatchProcessor:
+    authors_usage = []
+    batch_size = None
+    batch_tensor = None
+    batches = []
+    authors_size = None
+    timesteps = None
+    language = None
+    vocab_size = None
+    authors_order = []
+    labels = []
+    max_length = None
+    has_next_batch = True
+    eligible_authors = []
+
     def __init__(self, tensors_dir, language, authors_size, vocab_size, batch_size, timesteps):
         self.batch_size = batch_size
         self.timesteps = timesteps
