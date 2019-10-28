@@ -105,6 +105,7 @@ class OutputManager:
                  authors_size, vocab_size):
         self.models_path = os.path.join(save_path, self.MODELS_FOLDER_NAME)
         self.results_path = save_path
+        print(self.results_path)
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -144,8 +145,6 @@ class OutputManager:
                        self.SEPARATOR + str(accuracy) + '\n')
 
     def initialize_files(self):
-        if check_if_directory(self.results_path):
-            remove_directory(self.results_path)
         create_file(filename=self.RESULTS_FILENAME, path=self.results_path)
         create_file(filename=self.NETWORK_INFO_FILENAME, path=self.results_path)
         self.add_results_headline()

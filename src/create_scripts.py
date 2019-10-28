@@ -36,14 +36,17 @@ length = len(json)
 
 for i in range(length):
     json_el = json[i]
+    results_path = 'results'
     directory_path = 'scripts'
     task_name = json_el[NAME].split()[2]
     filename = 'run-' + task_name + '.sh'
     file_path = os.path.join(directory_path, filename)
     create_file(filename=filename, path=directory_path)
-    results_dir = os.path.join("results", task_name)
-    if check_if_directory(results_dir):
-        create_directory(results_dir)
+    task_results_dir = os.path.join(results_path, task_name)
+    if not check_if_directory(results_path):
+        create_directory(results_path)
+    if not check_if_directory(task_results_dir):
+        create_directory(task_results_dir)
 
     with open(file_path, 'a') as file:
         file.write(json_el[BEGINNING])
@@ -60,24 +63,24 @@ for i in range(length):
         file.write(NEW_LINE)
         file.write(json_el[PARTITION])
         file.write(NEW_LINE)
-        file.write(json_el[OUTPUT] + "/" + results_dir + "/output-" + task_name + ".out")
+        file.write(json_el[OUTPUT] + "/" + task_results_dir + "/output-" + task_name + ".out")
         file.write(NEW_LINE)
-        file.write(json_el[ERRORS] + "/" + results_dir + "/errors-" + task_name + ".err")
+        file.write(json_el[ERRORS] + "/" + task_results_dir + "/errors-" + task_name + ".err")
         file.write(NEW_LINE)
         file.write('cd $SLURM_SUBMIT_DIR')
         file.write(NEW_LINE + NEW_LINE + NEW_LINE)
         file.write('module load test/pytorch/1.1.0')
         file.write(NEW_LINE)
         file.write('python3 ./rnn.py {} {} {} {} {} {} {} {} {} {} {}'.format(json_el[HIDDEN_SIZE],
-                                                                               json_el[NUM_LAYERS],
-                                                                               json_el[NUM_EPOCHS],
-                                                                               json_el[BATCH_SIZE],
-                                                                               json_el[TIMESTEPS],
-                                                                               json_el[LEARNING_RATE],
-                                                                               json_el[AUTHORS_SIZE],
-                                                                               json_el[VOCAB_SIZE],
-                                                                               os.path.join(json_el[SAVE_PATH],
-                                                                                            json_el[NAME].split()[2]),
-                                                                               json_el[TENSORS_PATH],
-                                                                               json_el[LANGUAGE]))
+                                                                              json_el[NUM_LAYERS],
+                                                                              json_el[NUM_EPOCHS],
+                                                                              json_el[BATCH_SIZE],
+                                                                              json_el[TIMESTEPS],
+                                                                              json_el[LEARNING_RATE],
+                                                                              json_el[AUTHORS_SIZE],
+                                                                              json_el[VOCAB_SIZE],
+                                                                              os.path.join(json_el[SAVE_PATH],
+                                                                                           json_el[NAME].split()[2]),
+                                                                              json_el[TENSORS_PATH],
+                                                                              json_el[LANGUAGE]))
         file.close()
