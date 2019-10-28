@@ -83,11 +83,11 @@ class Train:
 
     def get_accuracy(self):
         evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
-                                                   batch_size=self.batch_size,
-                                                   authors_size=self.authors_size,
-                                                   timesteps=self.timesteps,
-                                                   language=self.language,
-                                                   vocab_size=self.vocab_size)
+                                                              batch_size=self.batch_size,
+                                                              authors_size=self.authors_size,
+                                                              timesteps=self.timesteps,
+                                                              language=self.language,
+                                                              vocab_size=self.vocab_size)
 
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
@@ -98,12 +98,12 @@ class Train:
             batches = batches.type(torch.FloatTensor)
             target = torch.tensor(labels)
             outputs, _ = self.model(batches, states)
-            scores=nn.functional.softmax(outputs, dim=1)
+            scores = nn.functional.softmax(outputs, dim=1)
             _, predictions = scores.max(dim=1)
             matches += torch.eq(predictions, target).sum().item()
             total += torch.numel(predictions)
 
-        return matches/total
+        return matches / total
 
 
 class OutputManager:
