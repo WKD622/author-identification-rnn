@@ -18,7 +18,7 @@
     "learning_rate": "0.04",
     "authors_size": "100",
     "vocab_size": "48",
-    "save_path": "results",
+    "save_path": "../results/",
     "tensors_path": "../data/dutch/tensors/known/",
     "language": "DU"
   }
