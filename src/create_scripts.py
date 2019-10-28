@@ -37,7 +37,6 @@ length = len(json)
 
 for i in range(length):
     json_el = json[i]
-    print(os.path.join("results", json_el[NAME].split()[2]))
     results_path = 'results'
     directory_path = 'scripts'
     task_name = json_el[NAME].split()[2]
