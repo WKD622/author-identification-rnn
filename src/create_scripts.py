@@ -63,15 +63,15 @@ for i in range(length):
         file.write(NEW_LINE + NEW_LINE + NEW_LINE)
         file.write('module load test/pytorch/1.1.0')
         file.write(NEW_LINE)
-        file.write('python3 ./rnn.py {} {} {} {} {} {} {} {} {} {} {}'.format(json_el[HIDDEN_SIZE],
-                                                                              json_el[NUM_LAYERS],
-                                                                              json_el[NUM_EPOCHS],
-                                                                              json_el[BATCH_SIZE],
-                                                                              json_el[TIMESTEPS],
-                                                                              json_el[LEARNING_RATE],
-                                                                              json_el[AUTHORS_SIZE],
-                                                                              json_el[VOCAB_SIZE],
-                                                                              json_el[SAVE_PATH],
-                                                                              json_el[TENSORS_PATH],
-                                                                              json_el[LANGUAGE]))
+        file.write('python3 ../rnn.py {} {} {} {} {} {} {} {} {} {} {}'.format(json_el[HIDDEN_SIZE],
+                                                                               json_el[NUM_LAYERS],
+                                                                               json_el[NUM_EPOCHS],
+                                                                               json_el[BATCH_SIZE],
+                                                                               json_el[TIMESTEPS],
+                                                                               json_el[LEARNING_RATE],
+                                                                               json_el[AUTHORS_SIZE],
+                                                                               json_el[VOCAB_SIZE],
+                                                                               json_el[SAVE_PATH],
+                                                                               json_el[TENSORS_PATH],
+                                                                               json_el[LANGUAGE]))
         file.close()
