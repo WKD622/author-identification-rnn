@@ -120,7 +120,6 @@ class OutputManager:
                  authors_size, vocab_size):
         self.models_path = os.path.join(save_path, self.MODELS_FOLDER_NAME)
         self.results_path = save_path
-        print(self.results_path)
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
