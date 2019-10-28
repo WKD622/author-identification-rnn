@@ -2,6 +2,7 @@ env/
 data/
 src/results
 src/scripts
+src/plots
 *.pyc
 __pycache__/
 
