@@ -1,5 +1,9 @@
 import os
 
+import sys
+
+sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
+
 from library.helpers.files.files_operations import (create_file)
 from library.helpers.files.json_loader import JsonFileLoader
 
