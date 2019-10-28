@@ -47,7 +47,6 @@ for i in range(length):
         create_directory(results_path)
     if not check_if_directory(task_results_dir):
         create_directory(task_results_dir)
-
     with open(file_path, 'a') as file:
         file.write(json_el[BEGINNING])
         file.write(NEW_LINE)
@@ -63,9 +62,9 @@ for i in range(length):
         file.write(NEW_LINE)
         file.write(json_el[PARTITION])
         file.write(NEW_LINE)
-        file.write(json_el[OUTPUT] + "/" + task_results_dir + "/output-" + task_name + ".out")
+        file.write(json_el[OUTPUT] + task_results_dir + "/output-" + task_name + ".out")
         file.write(NEW_LINE)
-        file.write(json_el[ERRORS] + "/" + task_results_dir + "/errors-" + task_name + ".err")
+        file.write(json_el[ERRORS] + task_results_dir + "/errors-" + task_name + ".err")
         file.write(NEW_LINE)
         file.write('cd $SLURM_SUBMIT_DIR')
         file.write(NEW_LINE + NEW_LINE + NEW_LINE)
