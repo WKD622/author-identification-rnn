@@ -32,7 +32,7 @@ class EvaluationBatchProcessor:
         self.parse_truth()
 
     def parse_truth(self):
-        open_path = truth_dir + 'truth-' + self.language + '.txt'
+        open_path = truth_dir + 'truth.txt'
         with open(open_path) as truth_file:
             truth_array = [next(truth_file) for x in range(self.authors_size)]
         for line in truth_array:

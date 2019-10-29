@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.helpers.files.files_operations import (create_directory)
 import matplotlib.pyplot as plt
 import csv
