@@ -26,3 +26,10 @@ class EvaluationBatchProcessor(BatchProcessor):
                 index = choice(self.eligible_authors)
 
         return index
+
+    def get_results(self):
+        self.batches = []
+        self.authors_order = []
+        print(self.max_length)
+        self.process()
+        return self.batches, self.authors_order
