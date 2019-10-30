@@ -28,6 +28,7 @@ VOCAB_SIZE = "vocab_size"
 SAVE_PATH = "save_path"
 TENSORS_PATH = "tensors_path"
 LANGUAGE = "language"
+TRUTH_FILE_PATH = "truth_file_path"
 NEW_LINE = "\n"
 
 json_loader = JsonFileLoader('to_run.json')
@@ -82,5 +83,6 @@ for i in range(length):
                                                                               os.path.join("results",
                                                                                            json_el[NAME].split()[2]),
                                                                               json_el[TENSORS_PATH],
-                                                                              json_el[LANGUAGE]))
+                                                                              json_el[LANGUAGE],
+                                                                              json_el[TRUTH_FILE_PATH]))
         file.close()

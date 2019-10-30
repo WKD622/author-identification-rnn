@@ -20,6 +20,7 @@
     "vocab_size": "48",
     "save_path": "../results/",
     "tensors_path": "../data/dutch/tensors/known/",
-    "language": "DU"
+    "language": "DU",
+    "truth_file_path": ""
   }
 ]

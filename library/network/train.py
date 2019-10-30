@@ -81,7 +81,7 @@ class Train:
                                             accuracy=self.get_accuracy(),
                                             epoch_number=self.num_epochs * counter)
 
-    def get_accuracy(sel
+    def get_accuracy(self):
         evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
                                                               batch_size=self.batch_size,
                                                               authors_size=self.authors_size,
