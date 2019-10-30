@@ -26,6 +26,7 @@ class Train:
         self.authors_size = authors_size
         self.vocab_size = vocab_size
         self.tensors_path = tensors_path
+        self.unknown_tensors_path = tensors_path.replace('known', 'unknown')
         self.language = language
         self.truth_file_path = truth_file_path
 
@@ -82,7 +83,7 @@ class Train:
                                             epoch_number=self.num_epochs * counter)
 
     def get_accuracy(self):
-        evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
+        evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.unknown_tensors_path,
                                                               batch_size=self.batch_size,
                                                               authors_size=self.authors_size,
                                                               timesteps=self.timesteps,
