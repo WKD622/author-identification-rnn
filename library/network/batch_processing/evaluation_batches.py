@@ -11,6 +11,15 @@ class EvaluationBatchProcessor(BatchProcessor):
         self.truth_file_path = truth_file_path
         self.parse_truth()
 
+    def set_max_length(self):
+        min_size = len(self.load_tensor(1))
+        for i in range(1, self.authors_size):
+            size = len(self.load_tensor(i))
+            min_size = min(size, min_size)
+            print(size)
+
+        self.max_length = min_size // self.timesteps - 1
+
     def parse_truth(self):
         with open(self.truth_file_path) as truth_file:
             truth_array = [next(truth_file) for x in range(self.authors_size)]
