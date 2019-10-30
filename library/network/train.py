@@ -16,7 +16,7 @@ from library.helpers.files.files_operations import (create_file, append_to_file,
 class Train:
 
     def __init__(self, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate, authors_size,
-                 save_path, tensors_path, language, vocab_size):
+                 save_path, tensors_path, language, vocab_size, truth_file_path):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_epochs = num_epochs
@@ -27,6 +27,7 @@ class Train:
         self.vocab_size = vocab_size
         self.tensors_path = tensors_path
         self.language = language
+        self.truth_file_path = truth_file_path
 
         self.model = TextGenerator(self.authors_size,
                                    self.vocab_size,
@@ -80,13 +81,14 @@ class Train:
                                             accuracy=self.get_accuracy(),
                                             epoch_number=self.num_epochs * counter)
 
-    def get_accuracy(self):
+    def get_accuracy(sel
         evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.tensors_path,
                                                               batch_size=self.batch_size,
                                                               authors_size=self.authors_size,
                                                               timesteps=self.timesteps,
                                                               language=self.language,
-                                                              vocab_size=self.vocab_size)
+                                                              vocab_size=self.vocab_size,
+                                                              truth_file_path=self.truth_file_path)
 
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
