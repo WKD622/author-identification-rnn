@@ -16,7 +16,6 @@ class EvaluationBatchProcessor(BatchProcessor):
         for i in range(1, self.authors_size):
             size = len(self.load_tensor(i))
             min_size = min(size, min_size)
-            print(size)
 
         self.max_length = min_size // self.timesteps - 1
 
@@ -39,6 +38,5 @@ class EvaluationBatchProcessor(BatchProcessor):
     def get_results(self):
         self.batches = []
         self.authors_order = []
-        print(self.max_length)
         self.process()
         return self.batches, self.authors_order
