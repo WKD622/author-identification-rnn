@@ -1,4 +1,3 @@
-import os
 from library.preprocessing.preprocessing import Preprocessing
 
 language_folder = 'english'
