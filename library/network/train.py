@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+import datetime
 
 import torch
 import torch.nn as nn
@@ -29,6 +31,7 @@ class Train:
         self.unknown_tensors_path = tensors_path.replace('known', 'unknown')
         self.language = language
         self.truth_file_path = truth_file_path
+        self.time_start = 0
 
         self.model = TextGenerator(self.authors_size,
                                    self.vocab_size,
@@ -49,6 +52,7 @@ class Train:
                                             vocab_size=vocab_size)
 
     def train(self):
+        self.time_start = time.time()
         counter = 0
         while True:
             batch_processor = BatchProcessor(tensors_dir=self.tensors_path,
@@ -80,7 +84,8 @@ class Train:
             self.output_manager.next_output(model=self.model,
                                             losses=losses,
                                             accuracy=self.get_accuracy(),
-                                            epoch_number=self.num_epochs * counter)
+                                            epoch_number=self.num_epochs * counter,
+                                            time_passed=time.time() - self.time_start)
 
     def get_accuracy(self):
         evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.unknown_tensors_path,
@@ -116,8 +121,10 @@ class OutputManager:
     RESULTS_FILENAME = 'results.csv'
     NETWORK_INFO_FILENAME = 'network_info.txt'
     SEPARATOR = ','
-    HEADLINE = MODEL + SEPARATOR + EPOCH + SEPARATOR + LOSS + SEPARATOR + ACCURACY + '\n'
+    TIME_PASSED = 'time'
+    HEADLINE = MODEL + SEPARATOR + EPOCH + SEPARATOR + LOSS + SEPARATOR + ACCURACY + SEPARATOR + TIME_PASSED + '\n'
     MODELS_FOLDER_NAME = 'models'
+
 
     def __init__(self, save_path, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate,
                  authors_size, vocab_size):
@@ -136,30 +143,33 @@ class OutputManager:
         self.initialize_files()
         self.outputs_counter = 1
 
-    def next_output(self, model, losses, accuracy, epoch_number):
+    def next_output(self, model, losses, accuracy, epoch_number, time_passed):
+        formatted_time_passed = str(datetime.timedelta(seconds=time_passed))
         loss_avg = sum(losses) / len(losses)
         self.save_model(model)
-        self.console_output(loss_avg, accuracy, epoch_number)
-        self.file_output(loss_avg, accuracy, epoch_number)
+        self.console_output(loss_avg, accuracy, epoch_number, time_passed=formatted_time_passed)
+        self.file_output(loss_avg, accuracy, epoch_number, time_passed=formatted_time_passed)
         self.outputs_counter += 1
 
-    def console_output(self, loss_avg, accuracy, epoch_number):
+    def console_output(self, loss_avg, accuracy, epoch_number, time_passed):
         print(str(self.outputs_counter) +
               ' ' + self.EPOCH + ': ' + str(epoch_number) +
               ' ' + self.LOSS + ': ' + str(loss_avg) +
-              ' ' + self.ACCURACY + ': ' + str(accuracy))
+              ' ' + self.ACCURACY + ': ' + str(accuracy) +
+              ' ' + self.TIME_PASSED + ': ' + str(time_passed))
 
     def save_model(self, model):
         save_path = os.path.join(self.models_path, str(self.outputs_counter))
         torch.save(model.state_dict(), save_path)
 
-    def file_output(self, loss_avg, accuracy, epoch_number):
+    def file_output(self, loss_avg, accuracy, epoch_number, time_passed):
         file_path = os.path.join(self.results_path, self.RESULTS_FILENAME)
         append_to_file(file_path,
                        str(self.outputs_counter) +
                        self.SEPARATOR + str(epoch_number) +
                        self.SEPARATOR + str(loss_avg) +
-                       self.SEPARATOR + str(accuracy) + '\n')
+                       self.SEPARATOR + str(accuracy) +
+                       self.SEPARATOR + str(time_passed) + '\n')
 
     def initialize_files(self):
         create_file(filename=self.RESULTS_FILENAME, path=self.results_path)
