@@ -1,11 +1,12 @@
+import os
 from library.preprocessing.preprocessing import Preprocessing
 
-data_path = "../data/dutch/authors/"
-mapped_save_path = "../data//dutch/reduced_authors/"
-mapped_source_path = "../data/dutch/reduced_authors/"
-tensors_path = "../data/dutch/tensors/"
-language = 'nl'
+language_folder = 'english'
+data_path = "../data/" + language_folder + "/authors/"
+mapped_save_path = "../data/" + language_folder + "/reduced_authors/"
+mapped_source_path = "../data/" + language_folder + "/reduced_authors/"
+tensors_path = "../data/" + language_folder + "/tensors/"
+language = 'en'
 pr = Preprocessing(language=language,
                    data_path=data_path,
-                   tensors_path=tensors_path,
-                   mapped_save_path=mapped_save_path)
+                   tensors_path=tensors_path)
