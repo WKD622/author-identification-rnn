@@ -1,13 +1,13 @@
 [
   {
     "beginning": "#!/bin/sh",
-    "name": "#SBATCH -J zad1",
+    "name": "#SBATCH -J test",
     "node_numbers": "#SBATCH -N 1",
     "tasks_per_node": "#SBATCH --ntasks-per-node=1",
     "mem_per_cpu": "#SBATCH --mem-per-cpu=5GB",
-    "time": "#SBATCH --time=00:00:30",
+    "time": "#SBATCH --time=00:20:00",
     "grant_name": "#SBATCH -A ap2018",
-    "partition": "#SBATCH -p plgrid-testing",
+    "partition": "#SBATCH -p plgrid",
     "output": "#SBATCH --output=",
     "errors": "#SBATCH --error=",
     "hidden_size": "100",
@@ -21,6 +21,6 @@
     "save_path": "../results/",
     "tensors_path": "../data/dutch/tensors/known/",
     "language": "DU",
-    "truth_file_path": ""
+    "truth_file_path": "../data/dutch/truth.txt"
   }
 ]

@@ -35,7 +35,6 @@ json_loader = JsonFileLoader('to_run.json')
 json = json_loader.load()
 length = len(json)
 
-
 for i in range(length):
     json_el = json[i]
     results_path = 'results'
@@ -73,16 +72,16 @@ for i in range(length):
         file.write('module load test/pytorch/1.1.0')
         file.write(NEW_LINE)
         file.write('python3 ./rnn.py {} {} {} {} {} {} {} {} {} {} {} {}'.format(json_el[HIDDEN_SIZE],
-                                                                              json_el[NUM_LAYERS],
-                                                                              json_el[NUM_EPOCHS],
-                                                                              json_el[BATCH_SIZE],
-                                                                              json_el[TIMESTEPS],
-                                                                              json_el[LEARNING_RATE],
-                                                                              json_el[AUTHORS_SIZE],
-                                                                              json_el[VOCAB_SIZE],
-                                                                              os.path.join("results",
-                                                                                           json_el[NAME].split()[2]),
-                                                                              json_el[TENSORS_PATH],
-                                                                              json_el[LANGUAGE],
-                                                                              json_el[TRUTH_FILE_PATH]))
+                                                                                 json_el[NUM_LAYERS],
+                                                                                 json_el[NUM_EPOCHS],
+                                                                                 json_el[BATCH_SIZE],
+                                                                                 json_el[TIMESTEPS],
+                                                                                 json_el[LEARNING_RATE],
+                                                                                 json_el[AUTHORS_SIZE],
+                                                                                 json_el[VOCAB_SIZE],
+                                                                                 os.path.join("results",
+                                                                                              json_el[NAME].split()[2]),
+                                                                                 json_el[TENSORS_PATH],
+                                                                                 json_el[LANGUAGE],
+                                                                                 json_el[TRUTH_FILE_PATH]))
         file.close()
