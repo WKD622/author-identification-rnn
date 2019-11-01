@@ -7,4 +7,5 @@ tensors_path = "../data/dutch/tensors/"
 language = 'nl'
 pr = Preprocessing(language=language,
                    data_path=data_path,
-                   tensors_path=tensors_path)
+                   tensors_path=tensors_path,
+                   mapped_save_path=mapped_save_path)
