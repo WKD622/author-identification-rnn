@@ -6,18 +6,7 @@ from library.network.batch_processing.batching import BatchProcessor
 
 class EvaluationBatchProcessor(BatchProcessor):
     def __init__(self, tensors_dir, language, authors_size, vocab_size, batch_size, timesteps, truth_file_path):
-        super().__init__(tensors_dir, language, authors_size, vocab_size, batch_size, timesteps)
-        self.eligible_authors = []
-        self.truth_file_path = truth_file_path
-        self.parse_truth()
-
-    def set_max_length(self):
-        min_size = len(self.load_tensor(1))
-        for i in range(1, self.authors_size):
-            size = len(self.load_tensor(i))
-            min_size = min(size, min_size)
-
-        self.max_length = min_size // self.timesteps - 1
+        super().__init__(tensors_dir, language, authors_size, vocab_size, batch_size, timesteps, truth_file_path)
 
     def parse_truth(self):
         with open(self.truth_file_path) as truth_file:
@@ -26,6 +15,18 @@ class EvaluationBatchProcessor(BatchProcessor):
             if line != '' and line.split()[1] == 'Y':
                 label = line.split()[0]
                 self.eligible_authors.append(int(label[-3:]))
+
+    def set_max_length(self):
+        max_size = len(self.load_tensor(1))
+        for i in self.eligible_authors:
+            size = len(self.load_tensor(i))
+            if max_size < size:
+                max_size = size
+                max_index = i
+            self.authors_max[i] = size // self.timesteps - 1
+
+        self.max_length = max_size // self.timesteps - 1
+        self.max_index = max_index
 
     def get_index(self):
         index = choice(self.eligible_authors)
