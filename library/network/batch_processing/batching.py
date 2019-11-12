@@ -30,6 +30,7 @@ class BatchProcessor:
 
     def set_max_length(self):
         max_size = len(self.load_tensor(1))
+        max_index = 1
         for i in range(1, self.authors_size+1):
             if not self.is_not_a_file(i):
                 size = len(self.load_tensor(i))
