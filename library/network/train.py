@@ -147,7 +147,7 @@ class OutputManager:
     def next_output(self, model, losses, accuracy, epoch_number, time_passed):
         formatted_time_passed = str(datetime.timedelta(seconds=time_passed))
         loss_avg = sum(losses) / len(losses)
-        if (loss_avg <= self.min_loss or accuracy >= self.max_accuracy) and self.outputs_counter > 25:
+        if loss_avg <= self.min_loss or accuracy >= self.max_accuracy:
             self.save_model(model)
         self.console_output(loss_avg, accuracy, epoch_number, time_passed=formatted_time_passed)
         self.file_output(loss_avg, accuracy, epoch_number, time_passed=formatted_time_passed)
