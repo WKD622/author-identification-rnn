@@ -31,13 +31,14 @@ class BatchProcessor:
     def set_max_length(self):
         max_size = len(self.load_tensor(1))
         for i in range(1, self.authors_size+1):
-            size = len(self.load_tensor(i))
-            if max_size < size:
-                max_size = size
-                max_index = i
-            self.authors_max[i] = size // self.timesteps - 1
+            if not self.is_not_a_file(i):
+                size = len(self.load_tensor(i))
+                if max_size < size:
+                    max_size = size
+                    max_index = i
+                self.authors_max[i] = size - 2*self.timesteps - 1
 
-        self.max_length = max_size // self.timesteps - 1
+        self.max_length = max_size - 2*self.timesteps - 1
         self.max_index = max_index
 
     def set_tensors(self):
@@ -46,10 +47,10 @@ class BatchProcessor:
             index = self.get_index()
             self.add_new_index(index)
             input_tensor = self.load_tensor(index)
-            # if index == self.max_index:
-            #     print(index, self.authors_usage[index], self.authors_max[index])
-            #     print(self.has_next_batch)
-            delta = self.authors_usage[index]*self.timesteps
+            if index == self.max_index:
+                print(index, self.authors_usage[index], self.authors_max[index])
+                print(self.has_next_batch)
+            delta = self.authors_usage[index]
             for y in range(0, self.timesteps):
                 batches[x][y] = input_tensor[delta + y]
         self.batches = torch.from_numpy(batches)
@@ -74,7 +75,7 @@ class BatchProcessor:
         idx = str(index).zfill(3)
         dir_name = self.language + idx
         path = self.tensors_dir + dir_name + '/' + dir_name + '.pt'
-        return os.path.isfile(path)
+        return not os.path.isfile(path)
 
     def load_tensor(self, index):
         idx = str(index).zfill(3)

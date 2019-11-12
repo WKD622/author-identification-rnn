@@ -88,7 +88,7 @@ class Train:
                                             time_passed=time.time() - self.time_start)
 
     def get_accuracy(self):
-        evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.unknown_tensors_path,
+        evaluation_batch_processor = BatchProcessor(tensors_dir=,
                                                               batch_size=self.batch_size,
                                                               authors_size=self.authors_size,
                                                               timesteps=self.timesteps,

@@ -18,14 +18,15 @@ class EvaluationBatchProcessor(BatchProcessor):
 
     def set_max_length(self):
         max_size = len(self.load_tensor(1))
-        for i in self.eligible_authors:
-            size = len(self.load_tensor(i))
-            if max_size < size:
-                max_size = size
-                max_index = i
-            self.authors_max[i] = size // self.timesteps - 1
+        for i in range(1, self.authors_size + 1):
+            if not self.is_not_a_file(i):
+                size = len(self.load_tensor(i))
+                if max_size < size:
+                    max_size = size
+                    max_index = i
+                self.authors_max[i] = size - 2 * self.timesteps - 1
 
-        self.max_length = max_size // self.timesteps - 1
+        self.max_length = max_size - 2 * self.timesteps - 1
         self.max_index = max_index
 
     def get_index(self):
