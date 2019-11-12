@@ -1,6 +1,7 @@
 import torch
 from random import randint, choice
 import numpy
+import os
 
 
 class BatchProcessor:
@@ -55,8 +56,8 @@ class BatchProcessor:
 
     def get_index(self):
         index = randint(1, self.authors_size)
-        if index in self.forbidden_index:
-            while index in self.forbidden_index:
+        if index in self.forbidden_index or self.is_not_a_file(index):
+            while index in self.forbidden_index and self.is_not_a_file(index):
                 index = randint(1, self.authors_size)
         return index
 
@@ -68,6 +69,12 @@ class BatchProcessor:
             self.has_next_batch = False
         elif self.authors_usage[index] == self.authors_max[index] and index != self.max_index:
             self.authors_usage[index] = 0
+
+    def is_not_a_file(self, index):
+        idx = str(index).zfill(3)
+        dir_name = self.language + idx
+        path = self.tensors_dir + dir_name + '/' + dir_name + '.pt'
+        return os.path.isfile(path)
 
     def load_tensor(self, index):
         idx = str(index).zfill(3)
