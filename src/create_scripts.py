@@ -26,9 +26,9 @@ LEARNING_RATE = "learning_rate"
 AUTHORS_SIZE = "authors_size"
 VOCAB_SIZE = "vocab_size"
 SAVE_PATH = "save_path"
-TENSORS_PATH = "tensors_path"
+TRAINING_TENSORS_PATH = "training_tensors_path"
+TESTING_TENSORS_PATH = "testing_tensors_path"
 LANGUAGE = "language"
-TRUTH_FILE_PATH = "truth_file_path"
 NEW_LINE = "\n"
 
 json_loader = JsonFileLoader('to_run.json')
@@ -81,7 +81,7 @@ for i in range(length):
                                                                                  json_el[VOCAB_SIZE],
                                                                                  os.path.join("results",
                                                                                               json_el[NAME].split()[2]),
-                                                                                 json_el[TENSORS_PATH],
-                                                                                 json_el[LANGUAGE],
-                                                                                 json_el[TRUTH_FILE_PATH]))
+                                                                                 json_el[TRAINING_TENSORS_PATH],
+                                                                                 json_el[TESTING_TENSORS_PATH],
+                                                                                 json_el[LANGUAGE]))
         file.close()

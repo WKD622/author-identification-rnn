@@ -12,15 +12,15 @@
     "errors": "#SBATCH --error=",
     "hidden_size": "100",
     "num_layers": "2",
-    "num_epochs": "5",
+    "num_epochs": "1",
     "batch_size": "40",
     "timesteps": "50",
-    "learning_rate": "0.04",
+    "learning_rate": "0.004",
     "authors_size": "100",
-    "vocab_size": "48",
+    "vocab_size": "40",
     "save_path": "../results/",
-    "tensors_path": "../data/dutch/tensors/known/",
-    "language": "DU",
-    "truth_file_path": "../data/dutch/truth.txt"
+    "testing_tensors_path": "../data/new/test/tensors/known/",
+    "training_tensors_path": "../data/new/train/tensors/known/",
+    "language": "EN"
   }
 ]

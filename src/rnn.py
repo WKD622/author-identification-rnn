@@ -11,8 +11,8 @@ rnn = Train(hidden_size=int(sys.argv[1]),
             authors_size=int(sys.argv[7]),
             vocab_size=int(sys.argv[8]),
             save_path=sys.argv[9],
-            tensors_path=sys.argv[10],
-            language=sys.argv[11],
-            truth_file_path=sys.argv[12])
+            training_tensors_path=sys.argv[10],
+            testing_tensors_path=sys.argv[11],
+            language=sys.argv[12])
 
 rnn.train()

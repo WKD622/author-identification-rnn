@@ -18,7 +18,7 @@ from library.helpers.files.files_operations import (create_file, append_to_file,
 class Train:
 
     def __init__(self, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate, authors_size,
-                 save_path, tensors_path, language, vocab_size, truth_file_path):
+                 save_path, training_tensors_path, testing_tensors_path, language, vocab_size):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_epochs = num_epochs
@@ -27,10 +27,9 @@ class Train:
         self.learning_rate = learning_rate
         self.authors_size = authors_size
         self.vocab_size = vocab_size
-        self.tensors_path = tensors_path
-        self.unknown_tensors_path = tensors_path.replace('known', 'unknown')
+        self.training_tensors_path = training_tensors_path
+        self.testing_tensors_path = testing_tensors_path
         self.language = language
-        self.truth_file_path = truth_file_path
         self.time_start = 0
 
         self.model = TextGenerator(self.authors_size,
@@ -55,7 +54,7 @@ class Train:
         self.time_start = time.time()
         counter = 0
         while True:
-            batch_processor = BatchProcessor(tensors_dir=self.tensors_path,
+            batch_processor = BatchProcessor(tensors_dir=self.training_tensors_path,
                                              batch_size=self.batch_size,
                                              authors_size=self.authors_size,
                                              timesteps=self.timesteps,
@@ -88,13 +87,12 @@ class Train:
                                             time_passed=time.time() - self.time_start)
 
     def get_accuracy(self):
-        evaluation_batch_processor = EvaluationBatchProcessor(tensors_dir=self.unknown_tensors_path,
-                                                              batch_size=self.batch_size,
-                                                              authors_size=self.authors_size,
-                                                              timesteps=self.timesteps,
-                                                              language=self.language,
-                                                              vocab_size=self.vocab_size,
-                                                              truth_file_path=self.truth_file_path)
+        evaluation_batch_processor = BatchProcessor(tensors_dir=self.testing_tensors_path,
+                                                    batch_size=self.batch_size,
+                                                    authors_size=self.authors_size,
+                                                    timesteps=self.timesteps,
+                                                    language=self.language,
+                                                    vocab_size=self.vocab_size)
 
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
