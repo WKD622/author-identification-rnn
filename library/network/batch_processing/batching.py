@@ -48,9 +48,6 @@ class BatchProcessor:
             index = self.get_index()
             self.add_new_index(index)
             input_tensor = self.load_tensor(index)
-            if index == self.max_index:
-                print(index, self.authors_usage[index], self.authors_max[index])
-                print(self.has_next_batch)
             delta = self.authors_usage[index]
             for y in range(0, self.timesteps):
                 batches[x][y] = input_tensor[delta + y]
