@@ -51,6 +51,7 @@ class Train:
                                             vocab_size=vocab_size)
 
     def train(self):
+        self.model.train()
         self.time_start = time.time()
         counter = 0
         while True:
@@ -98,6 +99,7 @@ class Train:
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
         evaluation_batch_processor.new_epoch()
         matches, total = 0, 0
+        self.model.eval()
         while evaluation_batch_processor.next_batch():
             batches, labels = evaluation_batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
