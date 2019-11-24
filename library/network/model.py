@@ -1,15 +1,20 @@
 import torch.nn as nn
 
 
-class TextGenerator(nn.Module):
+class MultiHeadedRnn(nn.Module):
 
-    def __init__(self, authors_size, vocab_size, hidden_size, num_layers, timesteps):
-        super(TextGenerator, self).__init__()
-        self.lstm = nn.LSTM(input_size=vocab_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
-        self.linear = nn.Linear(timesteps * hidden_size, authors_size)
+    def __init__(self, batch_size, authors_size, vocab_size, hidden_size, num_layers, timesteps):
+        super(MultiHeadedRnn, self).__init__()
+        self.batch_size = batch_size
+        self.authors_size = authors_size
+        self.lstm = nn.LSTM(input_size=vocab_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True,
+                            dropout=0.2)
+        self.linears = [nn.Linear(timesteps * hidden_size, batch_size) for i in range(authors_size)]
 
-    def forward(self, x, h):
-        out, (h, c) = self.lstm(x, h)
+    def forward(self, i, h):
+        out, (h, c) = self.lstm(i, h)
         out = out.reshape(out.size(0), out.size(1) * out.size(2))
-        out = self.linear(out)
-        return out, (h, c)
+        outs = []
+        for i in range(self.authors_size):
+            outs.append(self.linears[i](out))
+        return outs, (h, c)

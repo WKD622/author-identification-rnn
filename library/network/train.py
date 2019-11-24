@@ -1,18 +1,15 @@
-import os
 import sys
 import time
-import datetime
 
 import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
-from library.network.batch_processing.evaluation_batches import EvaluationBatchProcessor
+from library.network.output_manager import OutputManager
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.network.batch_processing.batching import BatchProcessor
-from library.network.model import TextGenerator
-from library.helpers.files.files_operations import (create_file, append_to_file, create_directory)
+from library.network.model import MultiHeadedRnn
 
 
 class Train:
@@ -31,13 +28,13 @@ class Train:
         self.testing_tensors_path = testing_tensors_path
         self.language = language
         self.time_start = 0
-
-        self.model = TextGenerator(self.authors_size,
-                                   self.vocab_size,
-                                   self.hidden_size,
-                                   self.num_layers,
-                                   self.timesteps)
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.model = MultiHeadedRnn(self.batch_size,
+                                    self.authors_size,
+                                    self.vocab_size,
+                                    self.hidden_size,
+                                    self.num_layers,
+                                    self.timesteps)
+        self.loss_fn = nn.CrossEntropyLoss(reduction='none')
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.learning_rate)
         self.output_manager = OutputManager(save_path=save_path,
@@ -60,143 +57,117 @@ class Train:
                                              timesteps=self.timesteps,
                                              language=self.language,
                                              vocab_size=self.vocab_size)
+            states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
+                      torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
+
             losses = []
             counter += 1
-            for epoch in range(self.num_epochs):
-                states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
-                          torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
+            batch_processor.new_epoch()
+            while batch_processor.next_batch():
+                batches, target, authors_order = batch_processor.get_results()
+                batches = batches.type(torch.FloatTensor)
+                outputs, _ = self.model(batches, states)
 
-                batch_processor.new_epoch()
-                while batch_processor.next_batch():
-                    batches, labels = batch_processor.get_results()
-                    batches = batches.type(torch.FloatTensor)
-                    target = torch.tensor(labels)
-                    outputs, _ = self.model(batches, states)
-                    loss = self.loss_fn(outputs, target)
-                    losses.append(loss.item())
+                heads_to_train = self.get_heads_for_training(authors_order)
+                loss = 0
+                for head in heads_to_train:
+                    # creating mask
+                    mask = (torch.tensor(authors_order) == head + 1).float()
 
-                    self.model.zero_grad()
-                    loss.backward()
-                    clip_grad_norm_(self.model.parameters(), 0.5)
-                    self.optimizer.step()
+                    # calculating loss which is a vector of same size as outputs[head]
+                    vector = self.loss_fn(outputs[head], target)
+
+                    # then we equalize to 0 elements of vector we don't need
+                    vector = vector * mask
+
+                    # and finally...
+                    loss += vector.mean()
+
+                self.model.zero_grad()
+                loss.backward()
+                clip_grad_norm_(self.model.parameters(), 0.5)
+                self.optimizer.step()
 
             self.output_manager.next_output(model=self.model,
                                             losses=losses,
                                             accuracy=self.get_accuracy(),
-                                            epoch_number=self.num_epochs * counter,
+                                            epoch_number=counter,
                                             time_passed=time.time() - self.time_start)
 
     def get_accuracy(self):
-        evaluation_batch_processor = BatchProcessor(tensors_dir=self.testing_tensors_path,
-                                                    batch_size=self.batch_size,
-                                                    authors_size=self.authors_size,
-                                                    timesteps=self.timesteps,
-                                                    language=self.language,
-                                                    vocab_size=self.vocab_size)
-
+        batch_processor = BatchProcessor(tensors_dir=self.training_tensors_path,
+                                         batch_size=self.batch_size,
+                                         authors_size=self.authors_size,
+                                         timesteps=self.timesteps,
+                                         language=self.language,
+                                         vocab_size=self.vocab_size)
+        batch_processor.new_epoch()
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
-        evaluation_batch_processor.new_epoch()
-        matches, total = 0, 0
-        while evaluation_batch_processor.next_batch():
-            batches, labels = evaluation_batch_processor.get_results()
+
+        authors_order = batch_processor.authors_order
+        looses = self.initialize_loss_struct(authors_order)
+
+        # average loss collected using training data
+        average_cross_entropies = self.get_average_cross_entropies()
+
+        while batch_processor.next_batch():
+            # here we start using evaluation data
+            batches, target, authors_order = batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
-            target = torch.tensor(labels)
             outputs, _ = self.model(batches, states)
-            scores = nn.functional.softmax(outputs, dim=1)
-            _, predictions = scores.max(dim=1)
-            matches += torch.eq(predictions, target).sum().item()
-            total += torch.numel(predictions)
 
-        return matches / total
+            # iterating through all heads
+            for head in range(self.authors_size):
+                # calculating cross entropies vector, where is included loss for each unknown author in batch
+                # (for this iteration).
+                entropies_vector = self.loss_fn(outputs[head], target)
+                # now, I can iterate through all unknown authors in batch for head I'm currently at
+                for counter, author in enumerate(authors_order):
+                    # and collect losses separately for each unknown author
+                    looses[head][author].append(entropies_vector[counter])
 
+        # after this, it's time to get average loss for each unknown author in each head.
+        for head in range(self.authors_size):
+            for author in authors_order:
+                looses[head][author] = looses[head][author].mean()
 
-class OutputManager:
-    EPOCH = 'epoch'
-    LOSS = 'loss'
-    ACCURACY = 'accuracy'
-    MODEL = 'model'
-    RESULTS_FILENAME = 'results.csv'
-    NETWORK_INFO_FILENAME = 'network_info.txt'
-    SEPARATOR = ','
-    TIME_PASSED = 'time'
-    HEADLINE = MODEL + SEPARATOR + EPOCH + SEPARATOR + LOSS + SEPARATOR + ACCURACY + SEPARATOR + TIME_PASSED + '\n'
-    MODELS_FOLDER_NAME = 'models'
+        # now it is time to use average loss collected earlier from training data
+        pass
 
-    def __init__(self, save_path, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate,
-                 authors_size, vocab_size):
-        self.models_path = os.path.join(save_path, self.MODELS_FOLDER_NAME)
-        self.results_path = save_path
+    def get_heads_for_training(self, authors_order):
+        heads = []
+        for author in authors_order:
+            heads.append(author - 1)
+        return heads
 
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.num_epochs = num_epochs
-        self.batch_size = batch_size
-        self.timesteps = timesteps
-        self.learning_rate = learning_rate
-        self.authors_size = authors_size
-        self.vocab_size = vocab_size
-        self.min_loss = 1000
-        self.max_accuracy = 0.0
+    def get_average_cross_entropies(self):
+        return []
+        average_cross_entropies_batch_processor = BatchProcessor(tensors_dir=self.training_tensors_path,
+                                                                 batch_size=self.batch_size,
+                                                                 authors_size=self.authors_size,
+                                                                 timesteps=self.timesteps,
+                                                                 language=self.language,
+                                                                 vocab_size=self.vocab_size)
+        average_cross_entropies_batch_processor.new_epoch()
+        states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
+                  torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-        self.initialize_files()
-        self.outputs_counter = 1
+        while average_cross_entropies_batch_processor.next_batch():
+            batches, target, authors_order = average_cross_entropies_batch_processor.get_results()
+            batches = batches.type(torch.FloatTensor)
+            outputs, _ = self.model(batches, states)
 
-    def next_output(self, model, losses, accuracy, epoch_number, time_passed):
-        formatted_time_passed = str(datetime.timedelta(seconds=time_passed))
-        loss_avg = sum(losses) / len(losses)
-        if loss_avg <= self.min_loss or accuracy >= self.max_accuracy:
-            self.save_model(model)
-        self.console_output(loss_avg, accuracy, epoch_number, time_passed=formatted_time_passed)
-        self.file_output(loss_avg, accuracy, epoch_number, time_passed=formatted_time_passed)
-        self.update_max_loss_and_accuracy(loss=loss_avg, accuracy=accuracy)
-        self.outputs_counter += 1
+            for head in range(self.authors_size):
+                vector = self.loss_fn(outputs[head], target)
+                for counter, author in enumerate(authors_order):
+                    loss_per_head[head][author] += vector[counter]
 
-    def console_output(self, loss_avg, accuracy, epoch_number, time_passed):
-        print(str(self.outputs_counter) +
-              ' ' + self.EPOCH + ': ' + str(epoch_number) +
-              ' ' + self.LOSS + ': ' + str(loss_avg) +
-              ' ' + self.ACCURACY + ': ' + str(accuracy) +
-              ' ' + self.TIME_PASSED + ': ' + str(time_passed))
-
-    def save_model(self, model):
-        save_path = os.path.join(self.models_path, str(self.outputs_counter))
-        torch.save(model.state_dict(), save_path)
-
-    def file_output(self, loss_avg, accuracy, epoch_number, time_passed):
-        file_path = os.path.join(self.results_path, self.RESULTS_FILENAME)
-        append_to_file(file_path,
-                       str(self.outputs_counter) +
-                       self.SEPARATOR + str(epoch_number) +
-                       self.SEPARATOR + str(loss_avg) +
-                       self.SEPARATOR + str(accuracy) +
-                       self.SEPARATOR + str(time_passed) + '\n')
-
-    def initialize_files(self):
-        create_file(filename=self.RESULTS_FILENAME, path=self.results_path)
-        create_file(filename=self.NETWORK_INFO_FILENAME, path=self.results_path)
-        self.add_results_headline()
-        self.add_network_info()
-        create_directory(self.models_path)
-
-    def add_results_headline(self):
-        path = os.path.join(self.results_path, self.RESULTS_FILENAME)
-        append_to_file(path, self.HEADLINE)
-
-    def add_network_info(self):
-        path = os.path.join(self.results_path, self.NETWORK_INFO_FILENAME)
-        append_to_file(path,
-                       'num_layers: ' + str(self.num_layers) + '\n' +
-                       'hidden_size: ' + str(self.hidden_size) + '\n' +
-                       'batch_size: ' + str(self.batch_size) + '\n' +
-                       'timesteps: ' + str(self.timesteps) + '\n' +
-                       'learning_rate: ' + str(self.learning_rate) + '\n' +
-                       'num_epochs: ' + str(self.num_epochs) + '\n' +
-                       'vocab_size: ' + str(self.vocab_size) + '\n' +
-                       'authors_size: ' + str(self.authors_size) + '\n')
-
-    def update_max_loss_and_accuracy(self, loss, accuracy):
-        if loss < self.min_loss:
-            self.min_loss = loss
-        if accuracy > self.max_accuracy:
-            self.max_accuracy = accuracy
+    def initialize_loss_struct(self, authors_order):
+        loss_per_head_struct = []
+        for head in range(self.authors_size):
+            loss_per_head_struct.append({})
+        for head in range(self.authors_size):
+            for author in authors_order:
+                loss_per_head_struct[head][author] = []
+        return loss_per_head_struct

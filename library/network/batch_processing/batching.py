@@ -1,7 +1,8 @@
-import torch
-from random import randint, choice
-import numpy
 import os
+from random import randint
+
+import numpy
+import torch
 
 
 class BatchProcessor:
@@ -12,18 +13,19 @@ class BatchProcessor:
         self.language = language
         self.vocab_size = vocab_size
         self.tensors_dir = tensors_dir
-        self.authors_usage = numpy.zeros(authors_size+1, dtype=int)
+        self.authors_usage = numpy.zeros(authors_size + 1, dtype=int)
         self.forbidden_index = []
         self.batches = []
         self.authors_order = []
         self.max_length = None
         self.has_next_batch = True
         self.max_index = 0
-        self.authors_max = numpy.zeros(authors_size+1, dtype=int)
+        self.authors_max = numpy.zeros(authors_size + 1, dtype=int)
         self.eligible_authors = []
         self.truth_file_path = truth_file_path
         self.parse_truth()
         self.set_max_length()
+        self.labels = numpy.zeros((self.batch_size, self.vocab_size), dtype=int)
 
     def parse_truth(self):
         return
@@ -31,15 +33,15 @@ class BatchProcessor:
     def set_max_length(self):
         max_size = len(self.load_tensor(1))
         max_index = 1
-        for i in range(1, self.authors_size+1):
+        for i in range(1, self.authors_size + 1):
             if not self.is_not_a_file(i):
                 size = len(self.load_tensor(i))
                 if max_size < size:
                     max_size = size
                     max_index = i
-                self.authors_max[i] = size - 2*self.timesteps - 1
+                self.authors_max[i] = size - 2 * self.timesteps - 2
 
-        self.max_length = max_size - 2*self.timesteps - 1
+        self.max_length = max_size - 2 * self.timesteps - 2
         self.max_index = max_index
 
     def set_tensors(self):
@@ -49,6 +51,7 @@ class BatchProcessor:
             self.add_new_index(index)
             input_tensor = self.load_tensor(index)
             delta = self.authors_usage[index]
+            self.labels[x] = input_tensor[delta + self.timesteps]
             for y in range(0, self.timesteps):
                 batches[x][y] = input_tensor[delta + y]
         self.batches = torch.from_numpy(batches)
@@ -61,7 +64,7 @@ class BatchProcessor:
         return index
 
     def add_new_index(self, index):
-        self.authors_order.append(index-1)
+        self.authors_order.append(index)
         self.authors_usage[index] += 1
         if self.authors_usage[index] == self.max_length and index == self.max_index:
             self.forbidden_index.append(index)
@@ -102,5 +105,20 @@ class BatchProcessor:
     def get_results(self):
         self.batches = []
         self.authors_order = []
+        self.labels = numpy.zeros((self.batch_size, self.vocab_size), dtype=int)
         self.process()
-        return self.batches, self.authors_order
+        return self.batches, torch.tensor(self.convert_to_one_number(self.labels)), self.authors_order
+
+    def convert_to_one_number(self, labels):
+        labels_one_number = []
+        for vector in labels:
+            counter = 1
+            appended = False
+            for value in vector:
+                if value == 1:
+                    appended = True
+                    labels_one_number.append(counter)
+                counter += 1
+            if not appended:
+                labels_one_number.append(0)
+        return labels_one_number
