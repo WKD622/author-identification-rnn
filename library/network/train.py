@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
-from library.helpers.files.files_operations import append_to_file
+from library.helpers.files.files_operations import append_to_file, create_file
 from library.network.output_manager import OutputManager
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
@@ -18,6 +18,7 @@ class Train:
 
     def __init__(self, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate, authors_size,
                  save_path, training_tensors_path, testing_tensors_path, language, vocab_size):
+        create_file('output.txt', '.', '')
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_epochs = num_epochs
