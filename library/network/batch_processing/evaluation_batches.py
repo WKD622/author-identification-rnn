@@ -31,7 +31,6 @@ class EvaluationBatchProcessor(BatchProcessor):
 
     def get_index(self):
         index = choice(self.eligible_authors)
-        print(index)
         if index in self.forbidden_index or self.is_not_a_file(index):
             while index in self.forbidden_index and self.is_not_a_file(index):
                 index = choice(self.eligible_authors)
