@@ -5,11 +5,12 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
+from library.helpers.files.files_operations import append_to_file
 from library.network.output_manager import OutputManager
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.network.batch_processing.batching import BatchProcessor
-from library.network.batch_processing.evaluation_batches import EvaluationBatchProcessor
+from library.network.batch_processing.batching_optimized import OptimizedBatchProcessor
 from library.network.model import MultiHeadedRnn
 
 
@@ -28,6 +29,7 @@ class Train:
         self.training_tensors_path = training_tensors_path
         self.testing_tensors_path = testing_tensors_path
         self.language = language
+        self.save_path = save_path
         self.time_start = 0
         self.truth_file_path = truth_file_path
         self.model = MultiHeadedRnn(self.batch_size,
@@ -62,7 +64,6 @@ class Train:
             states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                       torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-            losses = []
             counter += 1
             batch_processor.new_epoch()
             while batch_processor.next_batch():
@@ -90,26 +91,26 @@ class Train:
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
-            self.output_manager.next_output(model=self.model,
-                                            losses=losses,
-                                            accuracy=self.get_accuracy(),
-                                            epoch_number=counter,
-                                            time_passed=time.time() - self.time_start)
+            # self.output_manager.next_output(model=self.model,
+            #                                 losses=[1, 2, 3],
+            #                                 accuracy=self.get_accuracy(),
+            #                                 epoch_number=counter,
+            #                                 time_passed=time.time() - self.time_start)
 
     def get_accuracy(self):
-        batch_processor = EvaluationBatchProcessor(tensors_dir=self.testing_tensors_path,
-                                                   batch_size=self.batch_size,
-                                                   authors_size=self.authors_size,
-                                                   timesteps=self.timesteps,
-                                                   language=self.language,
-                                                   vocab_size=self.vocab_size,
-                                                   truth_file_path=self.truth_file_path)
+        batch_processor = BatchProcessor(tensors_dir=self.testing_tensors_path,
+                                         batch_size=self.batch_size,
+                                         authors_size=self.authors_size,
+                                         timesteps=self.timesteps,
+                                         language=self.language,
+                                         vocab_size=self.vocab_size,
+                                         truth_file_path=self.truth_file_path)
+
         batch_processor.new_epoch()
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-        authors_order = batch_processor.authors_order
-        looses = self.initialize_loss_struct(authors_order)
+        testing_data_looses = self.initialize_testing_loss_struct()
 
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
@@ -128,15 +129,27 @@ class Train:
                 # now, I can iterate through all unknown authors in batch for head I'm currently at
                 for counter, author in enumerate(authors_order):
                     # and collect losses separately for each unknown author
-                    looses[head][author].append(entropies_vector[counter])
+                    testing_data_looses[head][author].append(entropies_vector[counter])
 
-        # after this, it's time to get average loss for each unknown author in each head.
+        # after this, it's time to get average loss for each unknown author in each head. And ...
+        # to use average loss collected earlier from training data
+        max = -100000
+        min = 100000
         for head in range(self.authors_size):
-            for author in authors_order:
-                looses[head][author] = looses[head][author].mean()
+            for author in range(self.authors_size):
+                testing_data_looses[head][author + 1] = (torch.tensor(testing_data_looses[head][author + 1]).mean() -
+                                                         average_cross_entropies[head])
+                if testing_data_looses[head][author + 1] < min:
+                    min = testing_data_looses[head][author + 1]
+                if testing_data_looses[head][author + 1] > max:
+                    max = testing_data_looses[head][author + 1]
 
-        # now it is time to use average loss collected earlier from training data
-        pass
+        diff = max - min
+        for head in range(self.authors_size):
+            for author in range(self.authors_size):
+                testing_data_looses[head][author + 1] = (testing_data_looses[head][author + 1] - min) / diff
+
+        append_to_file(self.save_path, str(testing_data_looses))
 
     def get_heads_for_training(self, authors_order):
         heads = []
@@ -145,16 +158,17 @@ class Train:
         return heads
 
     def get_average_cross_entropies(self):
-        return []
-        average_cross_entropies_batch_processor = BatchProcessor(tensors_dir=self.training_tensors_path,
-                                                                 batch_size=self.batch_size,
-                                                                 authors_size=self.authors_size,
-                                                                 timesteps=self.timesteps,
-                                                                 language=self.language,
-                                                                 vocab_size=self.vocab_size)
+        average_cross_entropies_batch_processor = OptimizedBatchProcessor(tensors_dir=self.training_tensors_path,
+                                                                          batch_size=self.batch_size,
+                                                                          authors_size=self.authors_size,
+                                                                          timesteps=self.timesteps,
+                                                                          language=self.language,
+                                                                          vocab_size=self.vocab_size)
         average_cross_entropies_batch_processor.new_epoch()
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
+
+        authors_with_average_loss = self.initialize_average_training_loss_struct()
 
         while average_cross_entropies_batch_processor.next_batch():
             batches, target, authors_order = average_cross_entropies_batch_processor.get_results()
@@ -164,13 +178,24 @@ class Train:
             for head in range(self.authors_size):
                 vector = self.loss_fn(outputs[head], target)
                 for counter, author in enumerate(authors_order):
-                    loss_per_head[head][author] += vector[counter]
+                    authors_with_average_loss[author - 1].append(vector[counter])
 
-    def initialize_loss_struct(self, authors_order):
+            for counter, author in enumerate(authors_with_average_loss):
+                authors_with_average_loss[counter] = torch.tensor(authors_with_average_loss[counter]).mean()
+
+            return authors_with_average_loss
+
+    def initialize_testing_loss_struct(self):
         loss_per_head_struct = []
         for head in range(self.authors_size):
             loss_per_head_struct.append({})
         for head in range(self.authors_size):
-            for author in authors_order:
-                loss_per_head_struct[head][author] = []
+            for author in range(self.authors_size):
+                loss_per_head_struct[head][author + 1] = []
         return loss_per_head_struct
+
+    def initialize_average_training_loss_struct(self):
+        authors_with_average_loss = []
+        for author in range(self.authors_size):
+            authors_with_average_loss.append([])
+        return authors_with_average_loss

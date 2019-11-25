@@ -16,6 +16,9 @@ class EvaluationBatchProcessor(BatchProcessor):
                 label = line.split()[0]
                 self.eligible_authors.append(int(label[-3:]))
 
+    def get_eligible_authors_size(self):
+        return len(self.eligible_authors)
+
     def set_max_length(self):
         max_size = len(self.load_tensor(1))
         max_index = 1

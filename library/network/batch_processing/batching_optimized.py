@@ -4,7 +4,7 @@ from library.network.batch_processing.batching import BatchProcessor
 
 
 class OptimizedBatchProcessor(BatchProcessor):
-    def __init__(self, tensors_dir, language, authors_size, vocab_size, batch_size, timesteps, truth_file_path):
+    def __init__(self, tensors_dir, language, authors_size, vocab_size, batch_size, timesteps, truth_file_path=""):
         super().__init__(tensors_dir, language, authors_size, vocab_size, batch_size, timesteps, truth_file_path)
         self.current_author = 1
 
