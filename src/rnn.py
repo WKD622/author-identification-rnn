@@ -13,7 +13,6 @@ rnn = Train(hidden_size=int(sys.argv[1]),
             save_path=sys.argv[9],
             training_tensors_path=sys.argv[10],
             testing_tensors_path=sys.argv[11],
-            language=sys.argv[12],
-            truth_file_path=sys.argv[13])
+            language=sys.argv[12])
 
 rnn.train()
