@@ -17,7 +17,7 @@ from library.network.model import MultiHeadedRnn
 class Train:
 
     def __init__(self, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate, authors_size,
-                 save_path, training_tensors_path, testing_tensors_path, language, vocab_size, truth_file_path):
+                 save_path, training_tensors_path, testing_tensors_path, language, vocab_size):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_epochs = num_epochs
@@ -31,7 +31,6 @@ class Train:
         self.language = language
         self.save_path = save_path
         self.time_start = 0
-        self.truth_file_path = truth_file_path
         self.model = MultiHeadedRnn(self.batch_size,
                                     self.authors_size,
                                     self.vocab_size,
@@ -104,8 +103,7 @@ class Train:
                                          authors_size=self.authors_size,
                                          timesteps=self.timesteps,
                                          language=self.language,
-                                         vocab_size=self.vocab_size,
-                                         truth_file_path=self.truth_file_path)
+                                         vocab_size=self.vocab_size)
 
         batch_processor.new_epoch()
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
