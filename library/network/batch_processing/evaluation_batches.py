@@ -24,13 +24,14 @@ class EvaluationBatchProcessor(BatchProcessor):
             if max_size < size:
                 max_size = size
                 max_index = i
-            self.authors_max[i] = size // self.timesteps - 1
+            self.authors_max[i] = size - 2 * self.timesteps - 2
 
-        self.max_length = max_size // self.timesteps - 1
+        self.max_length = max_size - 2 * self.timesteps - 2
         self.max_index = max_index
 
     def get_index(self):
         index = choice(self.eligible_authors)
+        print(index)
         if index in self.forbidden_index or self.is_not_a_file(index):
             while index in self.forbidden_index and self.is_not_a_file(index):
                 index = choice(self.eligible_authors)
@@ -40,5 +41,6 @@ class EvaluationBatchProcessor(BatchProcessor):
     def get_results(self):
         self.batches = []
         self.authors_order = []
+        self.labels = numpy.zeros((self.batch_size, self.vocab_size), dtype=int)
         self.process()
-        return self.batches, self.authors_order
+        return self.batches, torch.tensor(self.convert_to_one_number(self.labels)), self.authors_order
