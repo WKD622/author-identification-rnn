@@ -9,7 +9,7 @@ class MultiHeadedRnn(nn.Module):
         self.authors_size = authors_size
         self.lstm = nn.LSTM(input_size=vocab_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True,
                             dropout=0.2)
-        self.linears = [nn.Linear(timesteps * hidden_size, batch_size) for i in range(authors_size)]
+        self.linears = [nn.Linear(timesteps * hidden_size, vocab_size) for i in range(authors_size)]
 
     def forward(self, i, h):
         out, (h, c) = self.lstm(i, h)
