@@ -91,6 +91,7 @@ class Train:
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
+            self.get_accuracy()
             # self.output_manager.next_output(model=self.model,
             #                                 losses=[1, 2, 3],
             #                                 accuracy=self.get_accuracy(),
@@ -148,8 +149,9 @@ class Train:
         for head in range(self.authors_size):
             for author in range(self.authors_size):
                 testing_data_looses[head][author + 1] = (testing_data_looses[head][author + 1] - min) / diff
-
+        append_to_file(self.save_path, '\nstart\n')
         append_to_file(self.save_path, str(testing_data_looses))
+        append_to_file(self.save_path, '\nend\n\n\n\n')
 
     def get_heads_for_training(self, authors_order):
         heads = []
