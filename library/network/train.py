@@ -52,7 +52,7 @@ class Train:
                                             vocab_size=vocab_size)
 
     def train(self):
-        append_to_file('output.txt', 'start')
+        append_to_file('output.txt', '\nstart\n')
         self.time_start = time.time()
         counter = 0
         while True:
@@ -111,13 +111,16 @@ class Train:
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-        append_to_file('output.txt', 'przed testing data')
+        append_to_file('output.txt', 'przed testing data\n')
         testing_data_looses = self.initialize_testing_loss_struct()
-        append_to_file('output.txt', 'po testing data')
+        append_to_file('output.txt', 'po testing data\n')
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
 
+        i = 0
         while batch_processor.next_batch():
+            i += 1
+            append_to_file('output.txt', str(i) + '\n')
             # here we start using evaluation data
             batches, target, authors_order = batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
