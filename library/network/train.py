@@ -178,6 +178,7 @@ class Train:
 
         authors_with_average_loss = self.initialize_average_training_loss_struct()
 
+        append_to_file('output.txt', 'after init\n')
         while average_cross_entropies_batch_processor.next_batch():
             batches, target, authors_order = average_cross_entropies_batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
@@ -189,8 +190,9 @@ class Train:
                     authors_with_average_loss[author - 1]['sum'] += vector[counter]
                     authors_with_average_loss[author - 1]['counter'] += 1
 
-        for counter, author in enumerate(authors_with_average_loss):
-            authors_with_average_loss[counter]['sum'] /= authors_with_average_loss[counter]['counter']
+        append_to_file('output.txt', 'after while\n')
+        for author in authors_with_average_loss:
+            author['sum'] /= author['counter']
 
         return authors_with_average_loss
 
