@@ -167,7 +167,7 @@ class Train:
                     min_author = author + 1
                     min_value = testing_data_looses[head][author + 1]['sum']
             results.append({'head': head, 'unknown_author_number': min_author})
-        append_to_file('output.txt', str(i))
+        append_to_file('output.txt', str(i) + '\n')
         append_to_file('output.txt', str(results))
 
     def get_heads_for_training(self, authors_order):
