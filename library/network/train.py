@@ -93,14 +93,14 @@ class Train:
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
-            self.get_accuracy()
+            self.get_accuracy(i=counter)
             # self.output_manager.next_output(model=self.model,
             #                                 losses=[1, 2, 3],
             #                                 accuracy=self.get_accuracy(),
             #                                 epoch_number=counter,
             #                                 time_passed=time.time() - self.time_start)
 
-    def get_accuracy(self):
+    def get_accuracy(self, i):
         append_to_file('output.txt', 'get accuracy \n')
         batch_processor = BatchProcessor(tensors_dir=self.testing_tensors_path,
                                          batch_size=self.batch_size,
@@ -157,7 +157,18 @@ class Train:
             for author in range(self.authors_size):
                 testing_data_looses[head][author + 1]['sum'] = (testing_data_looses[head][author + 1][
                                                                     'sum'] - min_) / diff
-        append_to_file('output.txt', str(testing_data_looses))
+
+        results = []
+        for head in range(self.authors_size):
+            min_value = 1000
+            min_author = -1
+            for author in range(self.authors_size):
+                if testing_data_looses[head][author + 1]['sum'] < min_value:
+                    min_author = author + 1
+                    min_value = testing_data_looses[head][author + 1]['sum']
+            results.append({'head': head, 'unknown_author_number': min_author})
+        append_to_file('output.txt', str(i))
+        append_to_file('output.txt', str(results))
 
     def get_heads_for_training(self, authors_order):
         heads = []
