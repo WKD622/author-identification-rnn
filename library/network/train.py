@@ -52,6 +52,7 @@ class Train:
                                             vocab_size=vocab_size)
 
     def train(self):
+        append_to_file('output.txt', 'start')
         self.time_start = time.time()
         counter = 0
         while True:
@@ -110,8 +111,9 @@ class Train:
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
+        append_to_file('output.txt', 'przed testing data')
         testing_data_looses = self.initialize_testing_loss_struct()
-
+        append_to_file('output.txt', 'po testing data')
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
 
@@ -135,6 +137,7 @@ class Train:
         # to use average loss collected earlier from training data
         max = -100000
         min = 100000
+        append_to_file('output.txt', 'min max')
         for head in range(self.authors_size):
             for author in range(self.authors_size):
                 testing_data_looses[head][author + 1] = (torch.tensor(testing_data_looses[head][author + 1]).mean() -
