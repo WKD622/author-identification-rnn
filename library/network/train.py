@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -5,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
-from library.helpers.files.files_operations import append_to_file, create_file
+from library.helpers.files.files_operations import append_to_file, create_file, create_directory
 from library.network.output_manager import OutputManager
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
@@ -111,16 +112,12 @@ class Train:
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-        append_to_file('output.txt', 'przed testing data\n')
         testing_data_looses = self.initialize_testing_loss_struct()
-        append_to_file('output.txt', 'po testing data\n')
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
-        append_to_file('output.txt', str(average_cross_entropies) + '\n')
-        i = 0
+        self.initialize_directories()
+
         while batch_processor.next_batch():
-            i += 1
-            append_to_file('output.txt', str(i) + '\n')
             # here we start using evaluation data
             batches, target, authors_order = batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
@@ -134,31 +131,29 @@ class Train:
                 # now, I can iterate through all unknown authors in batch for head I'm currently at
                 for counter, author in enumerate(authors_order):
                     # and collect losses separately for each unknown author
-                    append_to_file('output.txt', str(entropies_vector[counter]) + '\n')
-                    testing_data_looses[head][author].append(entropies_vector[counter])
+                    append_to_file(os.path.join('heads', str(head), str(author + 1) + '.txt'),
+                                   str(entropies_vector[counter].item()) + '\n')
+                    # testing_data_looses[head][author].append(entropies_vector[counter])
 
         # after this, it's time to get average loss for each unknown author in each head. And ...
         # to use average loss collected earlier from training data
-        max = -100000
-        min = 100000
-        append_to_file('output.txt', 'min max')
-        for head in range(self.authors_size):
-            for author in range(self.authors_size):
-                testing_data_looses[head][author + 1] = (torch.tensor(testing_data_looses[head][author + 1]).mean() -
-                                                         average_cross_entropies[head])
-                if testing_data_looses[head][author + 1] < min:
-                    min = testing_data_looses[head][author + 1]
-                if testing_data_looses[head][author + 1] > max:
-                    max = testing_data_looses[head][author + 1]
-
-        diff = max - min
-        for head in range(self.authors_size):
-            for author in range(self.authors_size):
-                testing_data_looses[head][author + 1] = (testing_data_looses[head][author + 1] - min) / diff
-        append_to_file('output.txt', '\nstart\n')
-        append_to_file('output.txt', str(testing_data_looses))
-        print(testing_data_looses)
-        append_to_file('output.txt', '\nend\n\n\n\n')
+        # max = -100000
+        # min = 100000
+        # append_to_file('output.txt', 'min max')
+        # for head in range(self.authors_size):
+        #     for author in range(self.authors_size):
+        #         testing_data_looses[head][author + 1] = (torch.tensor(testing_data_looses[head][author + 1]).mean() -
+        #                                                  average_cross_entropies[head])
+        #         if testing_data_looses[head][author + 1] < min:
+        #             min = testing_data_looses[head][author + 1]
+        #         if testing_data_looses[head][author + 1] > max:
+        #             max = testing_data_looses[head][author + 1]
+        #
+        # diff = max - min
+        # for head in range(self.authors_size):
+        #     for author in range(self.authors_size):
+        #         testing_data_looses[head][author + 1] = (testing_data_looses[head][author + 1] - min) / diff
+        # print(testing_data_looses)
 
     def get_heads_for_training(self, authors_order):
         heads = []
@@ -208,3 +203,9 @@ class Train:
         for author in range(self.authors_size):
             authors_with_average_loss.append([])
         return authors_with_average_loss
+
+    def initialize_directories(self):
+        for head in range(self.authors_size):
+            create_directory('heads/' + str(head))
+            for author in range(self.authors_size):
+                create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
