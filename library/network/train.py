@@ -116,7 +116,7 @@ class Train:
         append_to_file('output.txt', 'po testing data\n')
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
-
+        append_to_file('output.txt', str(average_cross_entropies) + '\n')
         i = 0
         while batch_processor.next_batch():
             i += 1
