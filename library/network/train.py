@@ -117,7 +117,9 @@ class Train:
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
 
+        append_to_file('output.txt', 'average_cross_entropies\n')
         while batch_processor.next_batch():
+            append_to_file('output.txt', '1\n')
             # here we start using evaluation data
             batches, target, authors_order = batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
@@ -131,7 +133,7 @@ class Train:
                 # now, I can iterate through all unknown authors in batch for head I'm currently at
                 for counter, author in enumerate(authors_order):
                     # and collect losses separately for each unknown author
-                    testing_data_looses[head][author]['sum'] += entropies_vector[counter]
+                    testing_data_looses[head][author]['sum'] += entropies_vector[counter].item()
                     testing_data_looses[head][author]['counter'] += 1
 
         # after this, it's time to get average loss for each unknown author in each head. And ...
@@ -186,8 +188,8 @@ class Train:
                 for counter, author in enumerate(authors_order):
                     authors_with_average_loss[author - 1].append(vector[counter])
 
-            for counter, author in enumerate(authors_with_average_loss):
-                authors_with_average_loss[counter] = torch.tensor(authors_with_average_loss[counter]).mean().item()
+        for counter, author in enumerate(authors_with_average_loss):
+            authors_with_average_loss[counter] = torch.tensor(authors_with_average_loss[counter]).mean().item()
 
             return authors_with_average_loss
 
