@@ -134,6 +134,7 @@ class Train:
                 # now, I can iterate through all unknown authors in batch for head I'm currently at
                 for counter, author in enumerate(authors_order):
                     # and collect losses separately for each unknown author
+                    append_to_file('output.txt', str(entropies_vector[counter]) + '\n')
                     testing_data_looses[head][author].append(entropies_vector[counter])
 
         # after this, it's time to get average loss for each unknown author in each head. And ...
