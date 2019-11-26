@@ -187,7 +187,7 @@ class Train:
             for head in range(self.authors_size):
                 vector = self.loss_fn(outputs[head], target)
                 for counter, author in enumerate(authors_order):
-                    authors_with_average_loss[author - 1]['sum'] += vector[counter]
+                    authors_with_average_loss[author - 1]['sum'] += vector[counter].item()
                     authors_with_average_loss[author - 1]['counter'] += 1
 
         append_to_file('output.txt', 'after while\n')
