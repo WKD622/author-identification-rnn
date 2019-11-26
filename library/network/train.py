@@ -101,6 +101,7 @@ class Train:
             #                                 time_passed=time.time() - self.time_start)
 
     def get_accuracy(self):
+        append_to_file('output.txt', 'get accuracy \n')
         batch_processor = BatchProcessor(tensors_dir=self.testing_tensors_path,
                                          batch_size=self.batch_size,
                                          authors_size=self.authors_size,
@@ -115,7 +116,6 @@ class Train:
         testing_data_looses = self.initialize_testing_loss_struct()
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
-        self.initialize_directories()
 
         while batch_processor.next_batch():
             # here we start using evaluation data
@@ -131,37 +131,30 @@ class Train:
                 # now, I can iterate through all unknown authors in batch for head I'm currently at
                 for counter, author in enumerate(authors_order):
                     # and collect losses separately for each unknown author
-                    append_to_file(os.path.join('heads', str(head), str(author) + '.txt'),
-                                   str(entropies_vector[counter].item()) + '\n')
-                    # testing_data_looses[head][author].append(entropies_vector[counter])
-
-        for head in range(self.authors_size):
-            for author in range(self.authors_size):
-                file = open(os.path.join('heads', str(head), str(author + 1) + '.txt'))
-                sum_ = 0.0
-                counter = 0
-                for line in file:
-                    counter += 1
-                    sum_ += float(line)
-                testing_data_looses[head][author + 1] = sum_ / counter
+                    testing_data_looses[head][author]['sum'] += entropies_vector[counter]
+                    testing_data_looses[head][author]['counter'] += 1
 
         # after this, it's time to get average loss for each unknown author in each head. And ...
         # to use average loss collected earlier from training data
-        max = -100000
-        min = 100000
-        append_to_file('output.txt', 'min max')
+        max_ = -100000
+        min_ = 100000
+        append_to_file('output.txt', 'min max\n')
         for head in range(self.authors_size):
             for author in range(self.authors_size):
-                testing_data_looses[head][author + 1] -= average_cross_entropies[head]
-                if testing_data_looses[head][author + 1] < min:
-                    min = testing_data_looses[head][author + 1]
-                if testing_data_looses[head][author + 1] > max:
-                    max = testing_data_looses[head][author + 1]
+                average = testing_data_looses[head][author + 1]['sum'] / testing_data_looses[head][author + 1][
+                    'counter']
+                testing_data_looses[head][author + 1]['sum'] = average - average_cross_entropies[head]
+                if testing_data_looses[head][author + 1]['sum'] < min_:
+                    min_ = testing_data_looses[head][author + 1]
+                if testing_data_looses[head][author + 1]['sum'] > max_:
+                    max_ = testing_data_looses[head][author + 1]
 
-        diff = max - min
+        diff = max_ - min_
         for head in range(self.authors_size):
             for author in range(self.authors_size):
-                testing_data_looses[head][author + 1] = (testing_data_looses[head][author + 1] - min) / diff
+                testing_data_looses[head][author + 1]['sum'] = (testing_data_looses[head][author + 1][
+                                                                    'sum'] - min_) / diff
+        print(testing_data_looses)
         append_to_file('output.txt', str(testing_data_looses))
 
     def get_heads_for_training(self, authors_order):
@@ -204,7 +197,10 @@ class Train:
             loss_per_head_struct.append({})
         for head in range(self.authors_size):
             for author in range(self.authors_size):
-                loss_per_head_struct[head][author + 1] = []
+                loss_per_head_struct[head][author + 1] = {
+                    'counter': 0,
+                    'sum': 0
+                }
         return loss_per_head_struct
 
     def initialize_average_training_loss_struct(self):
@@ -213,8 +209,8 @@ class Train:
             authors_with_average_loss.append([])
         return authors_with_average_loss
 
-    def initialize_directories(self):
-        for head in range(self.authors_size):
-            create_directory('heads/' + str(head))
-            for author in range(self.authors_size):
-                create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
+    # def initialize_directories(self):
+    #     for head in range(self.authors_size):
+    #         create_directory('heads/' + str(head))
+    #         for author in range(self.authors_size):
+    #             create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
