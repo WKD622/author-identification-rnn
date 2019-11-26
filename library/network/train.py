@@ -113,13 +113,14 @@ class Train:
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
+        self.initialize_testing_directories()
         testing_data_looses = self.initialize_testing_loss_struct()
+
         # average loss collected using training data
-        # average_cross_entropies = self.get_average_cross_entropies()
+        average_cross_entropies = self.get_average_cross_entropies()
 
         append_to_file('output.txt', 'average_cross_entropies\n')
         while batch_processor.next_batch():
-            append_to_file('output.txt', '1\n')
             # here we start using evaluation data
             batches, target, authors_order = batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
@@ -145,18 +146,17 @@ class Train:
             for author in range(self.authors_size):
                 average = testing_data_looses[head][author + 1]['sum'] / testing_data_looses[head][author + 1][
                     'counter']
-                testing_data_looses[head][author + 1]['sum'] = average - average_cross_entropies[head]
+                testing_data_looses[head][author + 1]['sum'] = average - average_cross_entropies[head]['sum']
                 if testing_data_looses[head][author + 1]['sum'] < min_:
-                    min_ = testing_data_looses[head][author + 1]
+                    min_ = testing_data_looses[head][author + 1]['sum']
                 if testing_data_looses[head][author + 1]['sum'] > max_:
-                    max_ = testing_data_looses[head][author + 1]
+                    max_ = testing_data_looses[head][author + 1]['sum']
 
         diff = max_ - min_
         for head in range(self.authors_size):
             for author in range(self.authors_size):
                 testing_data_looses[head][author + 1]['sum'] = (testing_data_looses[head][author + 1][
                                                                     'sum'] - min_) / diff
-        print(testing_data_looses)
         append_to_file('output.txt', str(testing_data_looses))
 
     def get_heads_for_training(self, authors_order):
@@ -186,12 +186,13 @@ class Train:
             for head in range(self.authors_size):
                 vector = self.loss_fn(outputs[head], target)
                 for counter, author in enumerate(authors_order):
-                    authors_with_average_loss[author - 1].append(vector[counter])
+                    authors_with_average_loss[author - 1]['sum'] += vector[counter]
+                    authors_with_average_loss[author - 1]['counter'] += 1
 
         for counter, author in enumerate(authors_with_average_loss):
-            authors_with_average_loss[counter] = torch.tensor(authors_with_average_loss[counter]).mean().item()
+            authors_with_average_loss[counter]['sum'] /= authors_with_average_loss[counter]['counter']
 
-            return authors_with_average_loss
+        return authors_with_average_loss
 
     def initialize_testing_loss_struct(self):
         loss_per_head_struct = []
@@ -208,11 +209,18 @@ class Train:
     def initialize_average_training_loss_struct(self):
         authors_with_average_loss = []
         for author in range(self.authors_size):
-            authors_with_average_loss.append([])
+            authors_with_average_loss.append({'sum': 0,
+                                              'counter': 0})
         return authors_with_average_loss
 
-    # def initialize_directories(self):
-    #     for head in range(self.authors_size):
-    #         create_directory('heads/' + str(head))
-    #         for author in range(self.authors_size):
-    #             create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
+    def initialize_testing_directories(self):
+        for head in range(self.authors_size):
+            create_directory('testing_heads/' + str(head))
+            for author in range(self.authors_size):
+                create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
+
+    def initialize_training_directories(self):
+        for head in range(self.authors_size):
+            create_directory('training_heads/' + str(head))
+            for author in range(self.authors_size):
+                create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
