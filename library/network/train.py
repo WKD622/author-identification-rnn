@@ -119,11 +119,9 @@ class Train:
         # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
 
-
-
         append_to_file('output.txt', 'average_cross_entropies\n')
 
-        append_to_file('output.txt', average_cross_entropies + '\n\n\n')
+        append_to_file('output.txt', str(average_cross_entropies) + '\n\n\n')
 
         while batch_processor.next_batch():
             # here we start using evaluation data
@@ -172,7 +170,7 @@ class Train:
                 if testing_data_looses[head][author + 1]['sum'] < min_value:
                     min_head = head
                     min_value = testing_data_looses[head][author + 1]['sum']
-            results.append({'head': min_head, 'unknown_author_number': author+1, 'loss_diff': min_value})
+            results.append({'head': min_head, 'unknown_author_number': author + 1, 'loss_diff': min_value})
         append_to_file('output.txt', str(i) + '\n')
         append_to_file('output.txt', str(results))
 
