@@ -166,7 +166,7 @@ class Train:
                 if testing_data_looses[head][author + 1]['sum'] < min_value:
                     min_author = author + 1
                     min_value = testing_data_looses[head][author + 1]['sum']
-            results.append({'head': head, 'unknown_author_number': min_author})
+            results.append({'head': head, 'unknown_author_number': min_author, 'loss_diff': min_value})
         append_to_file('output.txt', str(i) + '\n')
         append_to_file('output.txt', str(results))
 
