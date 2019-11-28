@@ -86,7 +86,7 @@ class Train:
                     vector = vector * mask
 
                     # and finally...
-                    loss += vector.mean()
+                    loss += torch.sum(vector) / torch.sum(mask)
 
                 self.model.zero_grad()
                 loss.backward()
