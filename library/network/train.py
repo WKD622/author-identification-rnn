@@ -87,6 +87,7 @@ class Train:
 
                     # and finally...
                     loss += torch.sum(vector) / torch.sum(mask)
+                    append_to_file('output.txt', str(torch.sum(vector)) + "   " + str(torch.sum(mask)) + "\n")
 
                 self.model.zero_grad()
                 loss.backward()
