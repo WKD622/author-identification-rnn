@@ -5,7 +5,7 @@ from library.helpers.files.files_operations import check_if_file, TextFileLoader
 from library.helpers.files.name_convention import check_name_convention, TEXT_NAME_CONVENTIONS, KNOWN_AUTHOR
 
 output = []
-path = '../data/my/data'
+path = '../data/old/english/authors'
 output_file_path = 'en_train.txt'
 for author in os.listdir(path):
     directory_path = os.path.join(path, author)

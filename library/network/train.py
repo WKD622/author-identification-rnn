@@ -72,7 +72,6 @@ class Train:
                 batches, target, authors_order = batch_processor.get_results()
                 batches = batches.type(torch.FloatTensor)
                 outputs, _ = self.model(batches, states)
-
                 heads_to_train = self.get_heads_for_training(authors_order)
                 loss = 0
                 for head in heads_to_train:
@@ -113,7 +112,6 @@ class Train:
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-        self.initialize_testing_directories()
         testing_data_looses = self.initialize_testing_loss_struct()
 
         # average loss collected using training data
@@ -149,7 +147,8 @@ class Train:
             for author in range(self.authors_size):
                 average = testing_data_looses[head][author + 1]['sum'] / testing_data_looses[head][author + 1][
                     'counter']
-                testing_data_looses[head][author + 1]['sum'] = average - average_cross_entropies[head]['sum']
+                # testing_data_looses[head][author + 1]['sum'] = average - average_cross_entropies[head]['sum']
+                testing_data_looses[head][author + 1]['sum'] = average
                 if testing_data_looses[head][author + 1]['sum'] < min_:
                     min_ = testing_data_looses[head][author + 1]['sum']
                 if testing_data_looses[head][author + 1]['sum'] > max_:
@@ -173,6 +172,13 @@ class Train:
             results.append({'head': min_head, 'unknown_author_number': author + 1, 'loss_diff': min_value})
         append_to_file('output.txt', str(i) + '\n')
         append_to_file('output.txt', str(results))
+
+        count = 0
+        for elem in results:
+            if elem['head'] + 1 == elem['unknown_author_number']:
+                count += 1
+        append_to_file('output.txt', '\n\ntrafieni:' + str(count))
+        append_to_file('output.txt', '\n\naccuracy:' + str(count/79))
 
     def get_heads_for_training(self, authors_order):
         heads = []
