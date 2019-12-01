@@ -52,7 +52,7 @@ class Train:
                                             authors_size=authors_size,
                                             vocab_size=vocab_size)
         self.softmax = nn.Softmax(dim=1)
-        self.loss = nn.BCELoss(reduction='none')
+        self.loss = nn.NLLLoss(reduction='none')
 
     def train(self):
         append_to_file('output.txt', '\nstart\n')
@@ -99,7 +99,7 @@ class Train:
                     # and finally...
                     loss += torch.sum(vector) / torch.sum(mask)
 
-                print(loss)
+                # print(loss)
                 self.model.zero_grad()
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
