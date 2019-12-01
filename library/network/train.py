@@ -51,6 +51,8 @@ class Train:
                                             learning_rate=learning_rate,
                                             authors_size=authors_size,
                                             vocab_size=vocab_size)
+        self.softmax = nn.Softmax(dim=1)
+        self.loss = nn.NLLLoss(reduction='none')
 
     def train(self):
         append_to_file('output.txt', '\nstart\n')
@@ -78,8 +80,18 @@ class Train:
                     # creating mask
                     mask = (torch.tensor(authors_order) == head + 1).float()
 
+                    # calculating softmax
+                    softmax = self.softmax(outputs[head])
+
                     # calculating loss which is a vector of same size as outputs[head]
-                    vector = self.loss_fn(outputs[head], target)
+                    vector = self.loss(softmax, target)
+
+                    # s = 0
+                    # for elem in self.softmax(outputs[head])[0]:
+                    #     s += elem
+                    # print(s)
+                    #
+                    # vector = self.loss_fn(outputs[head], target)
 
                     # then we equalize to 0 elements of vector we don't need
                     vector = vector * mask
@@ -88,7 +100,6 @@ class Train:
                     loss += torch.sum(vector) / torch.sum(mask)
 
                 self.model.zero_grad()
-                loss.backward()
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
@@ -178,7 +189,7 @@ class Train:
             if elem['head'] + 1 == elem['unknown_author_number']:
                 count += 1
         append_to_file('output.txt', '\n\ntrafieni:' + str(count))
-        append_to_file('output.txt', '\n\naccuracy:' + str(count/79))
+        append_to_file('output.txt', '\n\naccuracy:' + str(count / 79))
 
     def get_heads_for_training(self, authors_order):
         heads = []
@@ -204,7 +215,6 @@ class Train:
             batches, target, authors_order = average_cross_entropies_batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
             outputs, _ = self.model(batches, states)
-
             for head in range(self.authors_size):
                 vector = self.loss_fn(outputs[head], target)
                 for counter, author in enumerate(authors_order):

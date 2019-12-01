@@ -12,7 +12,6 @@ class OptimizedBatchProcessor(BatchProcessor):
         if self.authors_usage[self.current_author]+1 == self.authors_max[self.current_author]:
             self.current_author += 1
 
-        print(self.current_author, self.authors_usage[self.current_author], self.authors_max[self.current_author])
         return self.current_author
 
     def add_new_index(self, index):
