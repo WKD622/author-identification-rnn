@@ -52,7 +52,7 @@ class Train:
                                             authors_size=authors_size,
                                             vocab_size=vocab_size)
         self.softmax = nn.Softmax(dim=1)
-        self.loss = nn.NLLLoss(reduction='none')
+        self.loss = nn.BCELoss(reduction='none')
 
     def train(self):
         append_to_file('output.txt', '\nstart\n')
@@ -99,6 +99,7 @@ class Train:
                     # and finally...
                     loss += torch.sum(vector) / torch.sum(mask)
 
+                print(loss)
                 self.model.zero_grad()
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
@@ -142,7 +143,8 @@ class Train:
             for head in range(self.authors_size):
                 # calculating cross entropies vector, where is included loss for each unknown author in batch
                 # (for this iteration).
-                entropies_vector = self.loss_fn(outputs[head], target)
+                softmax = self.softmax(outputs[head])
+                entropies_vector = self.loss(softmax, target)
                 # now, I can iterate through all unknown authors in batch for head I'm currently at
                 for counter, author in enumerate(authors_order):
                     # and collect losses separately for each unknown author
@@ -216,7 +218,8 @@ class Train:
             batches = batches.type(torch.FloatTensor)
             outputs, _ = self.model(batches, states)
             for head in range(self.authors_size):
-                vector = self.loss_fn(outputs[head], target)
+                softmax = self.softmax(outputs[head])
+                vector = self.loss(softmax, target)
                 for counter, author in enumerate(authors_order):
                     authors_with_average_loss[author - 1]['sum'] += vector[counter].item()
                     authors_with_average_loss[author - 1]['counter'] += 1
