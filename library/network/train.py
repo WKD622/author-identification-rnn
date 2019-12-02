@@ -99,9 +99,9 @@ class Train:
                     # and finally...
                     loss += torch.sum(vector) / torch.sum(mask)
 
-                # print(loss)
                 self.model.zero_grad()
-                # clip_grad_norm_(self.model.parameters(), 0.5)
+                loss.backward()
+                clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
             self.get_accuracy(i=counter)
@@ -260,3 +260,16 @@ class Train:
             create_directory('training_heads/' + str(head))
             for author in range(self.authors_size):
                 create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
+
+    def getBack(self, var_grad_fn):
+        print(var_grad_fn)
+        for n in var_grad_fn.next_functions:
+            if n[0]:
+                try:
+                    tensor = getattr(n[0], 'variable')
+                    print(n[0])
+                    print('Tensor with grad found:', tensor)
+                    print(' - gradient:', tensor.grad)
+                    print()
+                except AttributeError as e:
+                    self.getBack(n[0])
