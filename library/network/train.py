@@ -8,6 +8,7 @@ from torch.nn.utils import clip_grad_norm_
 
 from library.helpers.files.files_operations import append_to_file, create_file, create_directory
 from library.network.output_manager import OutputManager
+from src.uncode_tensor import decode_letter, class_to_one_hot
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.network.batch_processing.batching import BatchProcessor
@@ -76,6 +77,13 @@ class Train:
                 outputs, _ = self.model(batches, states)
                 heads_to_train = self.get_heads_for_training(authors_order)
                 loss = 0
+                print('NEW BATCH')
+                for i, author in enumerate(batches):
+                    print(authors_order[i])
+                    for letter in author:
+                        print(decode_letter(letter), end='')
+                    print('\nnext_letter')
+                    print(decode_letter(class_to_one_hot(target[i])))
                 for head in heads_to_train:
                     # creating mask
                     mask = (torch.tensor(authors_order) == head + 1).float()
