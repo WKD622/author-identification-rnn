@@ -101,7 +101,7 @@ class Train:
 
                 # print(loss)
                 self.model.zero_grad()
-                clip_grad_norm_(self.model.parameters(), 0.5)
+                # clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
             self.get_accuracy(i=counter)
