@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torchviz import make_dot
 
 
 class MultiHeadedRnn(nn.Module):
