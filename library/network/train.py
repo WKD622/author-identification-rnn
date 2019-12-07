@@ -51,11 +51,10 @@ class Train:
                                             learning_rate=learning_rate,
                                             authors_size=authors_size,
                                             vocab_size=vocab_size)
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.LogSoftmax(dim=1)
         self.loss = nn.NLLLoss(reduction='none')
 
     def train(self):
-        append_to_file('output.txt', '\nstart\n')
         self.time_start = time.time()
         counter = 0
         while True:
@@ -76,47 +75,33 @@ class Train:
                 outputs, _ = self.model(batches, states)
                 heads_to_train = self.get_heads_for_training(authors_order)
                 loss = 0
-                # print('NEW BATCH')
-                # for i, author in enumerate(batches):
-                #     print(authors_order[i])
-                #     for letter in author:
-                #         print(decode_letter(letter), end='')
-                #     print('\nnext_letter')
-                #     print(decode_letter(class_to_one_hot(target[i])))
                 for head in heads_to_train:
                     # creating mask
                     mask = (torch.tensor(authors_order) == head + 1).float()
 
                     # calculating softmax
                     softmax = self.softmax(outputs[head])
-
+                    print(softmax)
                     # calculating loss which is a vector of same size as outputs[head]
                     vector = self.loss(softmax, target)
-
-                    # s = 0
-                    # for elem in self.softmax(outputs[head])[0]:
-                    #     s += elem
-                    # print(s)
-                    #
-                    # vector = self.loss_fn(outputs[head], target)
 
                     # then we equalize to 0 elements of vector we don't need
                     vector = vector * mask
 
                     # and finally...
-                    loss += torch.sum(vector) / torch.sum(mask)
+                    loss = torch.add(torch.sum(vector) / torch.sum(mask), loss)
 
                 self.model.zero_grad()
                 loss.backward()
                 clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
 
-            self.get_accuracy(i=counter)
-            # self.output_manager.next_output(model=self.model,
-            #                                 losses=[1, 2, 3],
-            #                                 accuracy=self.get_accuracy(),
-            #                                 epoch_number=counter,
-            #                                 time_passed=time.time() - self.time_start)
+            accuracy, loss = self.get_accuracy(i=counter)
+            self.output_manager.next_output(model=self.model,
+                                            losses=[loss],
+                                            accuracy=accuracy,
+                                            epoch_number=counter,
+                                            time_passed=time.time() - self.time_start)
 
     def get_accuracy(self, i):
         append_to_file('output.txt', 'get accuracy \n')
@@ -199,6 +184,8 @@ class Train:
                 count += 1
         append_to_file('output.txt', '\n\ntrafieni:' + str(count))
         append_to_file('output.txt', '\n\naccuracy:' + str(count / 79))
+        accuracy = count / 79
+        return accuracy, average_cross_entropies[0]['sum']
 
     def get_heads_for_training(self, authors_order):
         heads = []

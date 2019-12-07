@@ -121,6 +121,4 @@ class BatchProcessor:
                 counter += 1
             if not appended:
                 labels_one_number.append(0)
-        print(len(labels_one_number))
-        print(labels_one_number)
         return labels_one_number
