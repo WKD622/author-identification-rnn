@@ -86,7 +86,7 @@ class Train:
                     softmax = self.softmax(outputs[head])
 
                     # calculating loss which is a vector of same size as outputs[head]
-                    print(target, end='  ')
+                    # print(target, end='  ')
                     vector = self.loss(softmax, target)
 
                     # then we equalize to 0 elements of vector we don't need
@@ -94,7 +94,7 @@ class Train:
 
                     # and finally...
                     loss = torch.add(torch.sum(vector) / torch.sum(mask), loss)
-                print(loss)
+                # print(loss)
                 self.model.zero_grad()
                 loss.backward()
                 clip_grad_norm_(self.model.parameters(), 0.5)
