@@ -19,6 +19,8 @@ class Train:
     def __init__(self, hidden_size, num_layers, num_epochs, batch_size, timesteps, learning_rate, authors_size,
                  save_path, training_tensors_path, testing_tensors_path, language, vocab_size):
         create_file('output.txt', '.', '')
+        append_to_file('output.txt', 'start\n')
+
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_epochs = num_epochs
@@ -143,7 +145,8 @@ class Train:
         average_cross_entropies = self.get_average_cross_entropies()
         testing_data_looses = self.initialize_testing_loss_struct()
 
-        append_to_file('average_cross_entropies' + str(average_cross_entropies))
+        append_to_file('output.txt', 'average_cross_entropies\n' + str(average_cross_entropies))
+        append_to_file('output.txt', '\n')
 
         while batch_processor.next_batch():
             # here we start using evaluation data
