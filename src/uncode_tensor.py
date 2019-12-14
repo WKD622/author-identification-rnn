@@ -19,5 +19,5 @@ def decode_letter(vector):
 
 def class_to_one_hot(letter):
     vector = torch.zeros(40)
-    vector[letter - 1] = 1
+    vector[letter] = 1
     return vector

@@ -7,6 +7,7 @@ from torch.nn.utils import clip_grad_norm_
 
 from library.helpers.files.files_operations import append_to_file, create_file
 from library.network.output_manager import OutputManager
+from src.uncode_tensor import decode_letter, class_to_one_hot
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
 from library.network.batch_processing.batching import BatchProcessor
@@ -74,7 +75,7 @@ class Train:
                 batches, target, authors_order = batch_processor.get_results()
                 batches = batches.type(torch.FloatTensor)
                 outputs, _ = self.model(batches, states)
-                # self.print_input_sequence(batches, target, outputs)
+                self.print_input_sequence(batches, target, outputs)
                 heads_to_train = self.get_heads_for_training(authors_order)
                 loss = 0
                 for head in heads_to_train:
@@ -85,6 +86,7 @@ class Train:
                     softmax = self.softmax(outputs[head])
 
                     # calculating loss which is a vector of same size as outputs[head]
+                    print(target, end='  ')
                     vector = self.loss(softmax, target)
 
                     # then we equalize to 0 elements of vector we don't need
@@ -92,7 +94,7 @@ class Train:
 
                     # and finally...
                     loss = torch.add(torch.sum(vector) / torch.sum(mask), loss)
-
+                print(loss)
                 self.model.zero_grad()
                 loss.backward()
                 clip_grad_norm_(self.model.parameters(), 0.5)
@@ -111,18 +113,18 @@ class Train:
             heads.append(author - 1)
         return heads
 
-    # def print_input_sequence(self, sequence, target, outputs):
-    #     for index, author in enumerate(sequence):
-    #         print('AUTHOR ' + str(index) + ') SEQUENCE: |', end='')
-    #         for timestep in author:
-    #             print(decode_letter(timestep).replace('\n', ' '), end='')
-    #         target_ = decode_letter(class_to_one_hot(target)).replace('\n', ' ')
-    #         print('|     TARGET: |' + decode_letter(class_to_one_hot(target)).replace('\n', ' ') + '|', end='  ')
-    #         max_index = outputs[0][0].argmax(0)
-    #         output = decode_letter(class_to_one_hot(max_index + 1)).replace('\n', ' ')
-    #         print('OUTPUT: |' + decode_letter(class_to_one_hot(max_index + 1)).replace('\n', ' ') + '|', end='   ')
-    #         if output == target_:
-    #             print('MATCHED', end='      ')
+    def print_input_sequence(self, sequence, target, outputs):
+        for index, author in enumerate(sequence):
+            print('AUTHOR ' + str(index) + ') SEQUENCE: |', end='')
+            for timestep in author:
+                print(decode_letter(timestep).replace('\n', ' '), end='')
+            target_ = decode_letter(class_to_one_hot(target)).replace('\n', ' ')
+            print('|     TARGET: |' + decode_letter(class_to_one_hot(target)).replace('\n', ' ') + '|', end='  ')
+            max_index = outputs[0][0].argmax(0)
+            output = decode_letter(class_to_one_hot(max_index + 1)).replace('\n', ' ')
+            print('OUTPUT: |' + decode_letter(class_to_one_hot(max_index + 1)).replace('\n', ' ') + '|', end='   ')
+            if output == target_:
+                print('MATCHED', end='      ')
 
     def get_accuracy(self, i):
         """
