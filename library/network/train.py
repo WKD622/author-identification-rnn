@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 
@@ -6,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 
-from library.helpers.files.files_operations import append_to_file, create_file, create_directory
+from library.helpers.files.files_operations import append_to_file, create_file
 from library.network.output_manager import OutputManager
 
 sys.path.append('/net/people/plgjakubziarko/author-identification-rnn/')
@@ -57,6 +56,8 @@ class Train:
     def train(self):
         self.time_start = time.time()
         counter = 0
+        states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
+                  torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
         while True:
             batch_processor = BatchProcessor(tensors_dir=self.training_tensors_path,
                                              batch_size=self.batch_size,
@@ -64,15 +65,14 @@ class Train:
                                              timesteps=self.timesteps,
                                              language=self.language,
                                              vocab_size=self.vocab_size)
-            states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
-                      torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
-
             counter += 1
             batch_processor.new_epoch()
+            torch.autograd.set_detect_anomaly(True)
             while batch_processor.next_batch():
                 batches, target, authors_order = batch_processor.get_results()
                 batches = batches.type(torch.FloatTensor)
                 outputs, _ = self.model(batches, states)
+                # self.print_input_sequence(batches, target, outputs)
                 heads_to_train = self.get_heads_for_training(authors_order)
                 loss = 0
                 for head in heads_to_train:
@@ -81,7 +81,7 @@ class Train:
 
                     # calculating softmax
                     softmax = self.softmax(outputs[head])
-                    print(softmax)
+
                     # calculating loss which is a vector of same size as outputs[head]
                     vector = self.loss(softmax, target)
 
@@ -103,8 +103,32 @@ class Train:
                                             epoch_number=counter,
                                             time_passed=time.time() - self.time_start)
 
+    def get_heads_for_training(self, authors_order):
+        heads = []
+        for author in authors_order:
+            heads.append(author - 1)
+        return heads
+
+    # def print_input_sequence(self, sequence, target, outputs):
+    #     for index, author in enumerate(sequence):
+    #         print('AUTHOR ' + str(index) + ') SEQUENCE: |', end='')
+    #         for timestep in author:
+    #             print(decode_letter(timestep).replace('\n', ' '), end='')
+    #         target_ = decode_letter(class_to_one_hot(target)).replace('\n', ' ')
+    #         print('|     TARGET: |' + decode_letter(class_to_one_hot(target)).replace('\n', ' ') + '|', end='  ')
+    #         max_index = outputs[0][0].argmax(0)
+    #         output = decode_letter(class_to_one_hot(max_index + 1)).replace('\n', ' ')
+    #         print('OUTPUT: |' + decode_letter(class_to_one_hot(max_index + 1)).replace('\n', ' ') + '|', end='   ')
+    #         if output == target_:
+    #             print('MATCHED', end='      ')
+
     def get_accuracy(self, i):
-        append_to_file('output.txt', 'get accuracy \n')
+        """
+        Pushes all unknown texts on all heads and for each text finds head which has the smallest
+        average cross entropy value.
+        :param i:
+        :return:
+        """
         batch_processor = BatchProcessor(tensors_dir=self.testing_tensors_path,
                                          batch_size=self.batch_size,
                                          authors_size=self.authors_size,
@@ -116,14 +140,8 @@ class Train:
         states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size),
                   torch.zeros(self.num_layers, self.batch_size, self.hidden_size))
 
-        testing_data_looses = self.initialize_testing_loss_struct()
-
-        # average loss collected using training data
         average_cross_entropies = self.get_average_cross_entropies()
-
-        append_to_file('output.txt', 'average_cross_entropies\n')
-
-        append_to_file('output.txt', str(average_cross_entropies) + '\n\n\n')
+        testing_data_looses = self.initialize_testing_loss_struct()
 
         while batch_processor.next_batch():
             # here we start using evaluation data
@@ -187,13 +205,12 @@ class Train:
         accuracy = count / 79
         return accuracy, average_cross_entropies[0]['sum']
 
-    def get_heads_for_training(self, authors_order):
-        heads = []
-        for author in authors_order:
-            heads.append(author - 1)
-        return heads
-
     def get_average_cross_entropies(self):
+        """
+        Pushes known texts of each author to his head and after each sequence saves value of cross entropy.
+        After whole process calculates average cross entropy for each head on known texts of its author.
+        :return:
+        """
         average_cross_entropies_batch_processor = OptimizedBatchProcessor(tensors_dir=self.training_tensors_path,
                                                                           batch_size=self.batch_size,
                                                                           authors_size=self.authors_size,
@@ -206,7 +223,6 @@ class Train:
 
         authors_with_average_loss = self.initialize_average_training_loss_struct()
 
-        append_to_file('output.txt', 'after init\n')
         while average_cross_entropies_batch_processor.next_batch():
             batches, target, authors_order = average_cross_entropies_batch_processor.get_results()
             batches = batches.type(torch.FloatTensor)
@@ -218,7 +234,6 @@ class Train:
                     authors_with_average_loss[author - 1]['sum'] += vector[counter].item()
                     authors_with_average_loss[author - 1]['counter'] += 1
 
-        append_to_file('output.txt', 'after while\n')
         for author in authors_with_average_loss:
             author['sum'] /= author['counter']
 
@@ -242,28 +257,3 @@ class Train:
             authors_with_average_loss.append({'sum': 0,
                                               'counter': 0})
         return authors_with_average_loss
-
-    def initialize_testing_directories(self):
-        for head in range(self.authors_size):
-            create_directory('testing_heads/' + str(head))
-            for author in range(self.authors_size):
-                create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
-
-    def initialize_training_directories(self):
-        for head in range(self.authors_size):
-            create_directory('training_heads/' + str(head))
-            for author in range(self.authors_size):
-                create_file(str(author + 1) + '.txt', os.path.join('heads', str(head)))
-
-    def getBack(self, var_grad_fn):
-        print(var_grad_fn)
-        for n in var_grad_fn.next_functions:
-            if n[0]:
-                try:
-                    tensor = getattr(n[0], 'variable')
-                    print(n[0])
-                    print('Tensor with grad found:', tensor)
-                    print(' - gradient:', tensor.grad)
-                    print()
-                except AttributeError as e:
-                    self.getBack(n[0])

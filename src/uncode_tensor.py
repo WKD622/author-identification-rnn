@@ -1,7 +1,7 @@
 import torch
 from library.preprocessing.to_tensor.alphabets.en_alphabet import alphabet as en
 
-path = '../data/new/test/tensors/known/EN030/EN030.pt'
+path = '../data/old/english/tensors/known/EN002/EN002.pt'
 
 tensor = torch.load(path)
 

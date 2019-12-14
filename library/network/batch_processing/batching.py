@@ -112,7 +112,7 @@ class BatchProcessor:
     def convert_to_one_number(self, labels):
         labels_one_number = []
         for vector in labels:
-            counter = 0
+            counter = 1
             appended = False
             for value in vector:
                 if value == 1:
