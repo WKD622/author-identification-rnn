@@ -143,6 +143,8 @@ class Train:
         average_cross_entropies = self.get_average_cross_entropies()
         testing_data_looses = self.initialize_testing_loss_struct()
 
+        append_to_file('average_cross_entropies' + str(average_cross_entropies))
+
         while batch_processor.next_batch():
             # here we start using evaluation data
             batches, target, authors_order = batch_processor.get_results()
